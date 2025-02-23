@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title>D3.xml Example</title>
+   <script src="https://d3js.org/d3.v4.min.js"></script>
+   <script type="text/javascript" src="http://x3dom.org/x3dom/dist/x3dom-full.js"></script>
+   <link rel="stylesheet" type="text/css" href="http://www.x3dom.org/download/dev/x3dom.css"/>
+   <script src="svg_scatterplot.js"></script>
+   <script src="x4_save_file_analysis.js"></script>
+   <script src="hexbin.js"></script>
+   <script src="hexmap.js"></script>
+   <style type="text/css">
+    .dashboard div {
+      font: 10px sans-serif;
+      padding: 3px;
+      margin: 1px;
+    }
+    .chart div {
+      background-color: steelblue;
+      text-align: left;
+      padding: 3px;
+      margin: 1px;
+      color: black;
+    }
+    svg .rotate {
+      transform-box: fill-box;
+      transform-origin: center;
+      transform: rotate(45deg);
+    }
+  </style>
+</head>
+<body>
+  <h2>Chart</h2>
+  <div class="dashboard">
+    <div style="display: flex;">
+      <div id="sector-chart" class="chart" style="display: block;">
+        
+      </div>
+      <div id="connection-chart" class="chart" style="display: block;"></div>
+    </div>
+    <svg id="universeSvg" style="background-color: black;" stroke-width="2"><g id="sectorsGroup"></g></svg>
+    <svg id="sectorSvg" style="background-color: white;" stroke-width="2"><g id="pointsGroup"></g><g id="linesGroup"></g></svg>
+    <div id="poiPlot"></div>
+  </div>
+  
+  <script type="text/javascript">
+    console.log("script");
+
+    
+
+    const sectorIncludeFilter = []
+    // sectorIncludeFilter.push('cluster_01_sector001')
+    // sectorIncludeFilter.push('cluster_01_sector002')
+    // sectorIncludeFilter.push('cluster_01_sector003')
+    // sectorIncludeFilter.push('cluster_02_sector001')
+    // sectorIncludeFilter.push('cluster_06_sector001')
+    // sectorIncludeFilter.push('cluster_06_sector002')
+    // sectorIncludeFilter.push('cluster_45_sector001')
+    // sectorIncludeFilter.push('cluster_44_sector001')    
+    // sectorIncludeFilter.push('c409s01_sector001')
+    // sectorIncludeFilter.push('cluster_18_sector001')
+
+
+    d3.xml("save_007.xml",  function(error, document) {
+      if (error) throw error;
+
+      let sectorData = buildSectorData(document)
+      let sectorConnections = buildSectorConnections(sectorData)
+
+
+      console.log("sectorConnections found: " + sectorConnections.length)
+
+      let plots = sectorData.map(function (sector) {
+        return { 
+          x: sector.plot[0], 
+          y: sector.plot[1],
+          clusterPos: sector.plot[2],
+          title: sector.name,
+          color: sector.owner.color
+        }
+      })
+
+      hexmap(d3.select("#sectorsGroup"), plots)
+
+      d3.select("#sectorsGroup").selectAll(".hexagon")
+      .attr("idx", function(d, i) { return i })
+      .on("click", function(event) {
+        var idxStr = d3.select(this).attr("idx")
+        console.log("draw scatter for: " + idxStr)
+        if (idxStr == "") return;
+        var selectedIdx = parseInt(idxStr)
+        scatterPlot3d(sectorData[selectedIdx].components)
+      })
+
+      // d3.select("#connection-chart")
+      //   .selectAll("div")
+      //   .remove()
+        
+      //   d3.select("#connection-chart")
+      //   .selectAll("div")
+      //   .data(sectorConnections)
+      //   .enter().append("div")
+      //   .style("width", function(d) { return d.displayText * 10 + "px"; })
+      //   .text(function(d) {return d.displayText })
+
+      console.log("sectorsFound: " + sectorData.length)
+
+    //   d3.select("#sector-chart")
+    //   .selectAll("div")
+    //   .remove()
+
+    //   d3.select("#sector-chart")
+    //   .selectAll("div")
+    //   .data(sectorData)
+    //   .enter().append("div")
+    //   .style("width", function(d) { return d.displayName * 10 + "px"; })
+    //   .on("click", function(event) {
+    //     // recover the option that has been chosen
+    //     var selectedOption = d3.select(this).attr("sectorid")
+    //     var selectedIdx = parseInt(d3.select(this).attr("idx"))
+    //     console.log("select sector: " + selectedOption + " ["+selectedIdx+"]") 
+        
+    //     scatterPlot3d(sectorData[selectedIdx].components)
+    //   })
+    //   .text(function(d) {return d.displayName })
+    //   .attr("sectorid", function (d) { return d.sectorid; })
+    //   .attr("idx", function (d, i) { return i; })
+    //   .attr("macro", function (d) { return d.macro; });
+
+    });
+    console.log("savegame loaded");
+
+
+    
+
+
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,1 @@
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --allow-file-access-from-files C:\Repos\x4-save-map\index.html
