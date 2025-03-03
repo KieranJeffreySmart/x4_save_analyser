@@ -1,0 +1,5 @@
+py .\unpack-game-data.py "C:\Repos\x4_save_analyser\game_data\cabs\ego_core" "C:\Repos\x4_save_analyser\game_data\ego_core\unpacked" -f "^.*(xml|xsd|html|js|css)$"
+py .\unpack-game-data.py "C:\Repos\x4_save_analyser\game_data\cabs\ego_dlc_pirate" "C:\Repos\x4_save_analyser\game_data\ego_dlc_pirate\unpacked" -f "^.*(xml|xsd|html|js|css)$"
+py .\unpack-game-data.py "C:\Repos\x4_save_analyser\game_data\cabs\ego_dlc_boron" "C:\Repos\x4_save_analyser\game_data\ego_dlc_boron\unpacked" -f "^.*(xml|xsd|html|js|css)$"
+py .\unpack-game-data.py "C:\Repos\x4_save_analyser\game_data\cabs\ego_dlc_split" "C:\Repos\x4_save_analyser\game_data\ego_dlc_split\unpacked" -f "^.*(xml|xsd|html|js|css)$"
+py .\unpack-game-data.py "C:\Repos\x4_save_analyser\game_data\cabs\ego_dlc_terran" "C:\Repos\x4_save_analyser\game_data\ego_dlc_terran\unpacked" -f "^.*(xml|xsd|html|js|css)$"

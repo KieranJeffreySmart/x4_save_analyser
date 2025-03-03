@@ -10,6 +10,12 @@
    <script src="hexbin.js"></script>
    <script src="hexmap.js"></script>
    <style type="text/css">
+    .tooltip {
+        pointer-events:none; /*let mouse events pass through*/
+        opacity:0;
+        transition: opacity 0.3s;
+    }
+
     .dashboard div {
       font: 10px sans-serif;
       padding: 3px;
@@ -26,48 +32,65 @@
       transform-box: fill-box;
       transform-origin: center;
       transform: rotate(45deg);
+      overflow:visible; 
+    }
+
+    svg text {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    g.tooltip rect {
+        fill: steelblue;
+        stroke: none;
+    }
+    circle:hover + g.tooltip.css {
+      opacity:1;
     }
   </style>
 </head>
 <body>
-  <h2>Chart</h2>
   <div class="dashboard">
-    <div style="display: flex;">
-      <div id="sector-chart" class="chart" style="display: block;">
-        
-      </div>
-      <div id="connection-chart" class="chart" style="display: block;"></div>
-    </div>
-    <svg id="universeSvg" style="background-color: black;" stroke-width="2"><g id="sectorsGroup"></g></svg>
-    <svg id="sectorSvg" style="background-color: white;" stroke-width="2"><g id="pointsGroup"></g><g id="linesGroup"></g></svg>
-    <div id="poiPlot"></div>
+    <svg id="universeSvg" width="75%" height="250" style="background-color: black;" stroke-width="2"><g id="sectorsGroup"></g></svg>
+    
+    <svg id="sectorSvg"  width="100%"  height="650" style="background-color: black;" stroke-width="2">
+      <g id="pointsGroup"></g>
+      <g id="linesGroup"></g>
+    </svg>
+    <table>
+      <tr>
+        <td>
+        </td>
+      </tr>
+      <tr>
+        <td>
+        </td>
+      </tr>
+    </table>
   </div>
   
   <script type="text/javascript">
     console.log("script");
 
+    d3.xml("sectors.xml",  function(error, document) {
+      if (error) throw error;
+
+      initSectorData(document)
+    });
     
+    d3.xml("zones.xml",  function(error, document) {
+      if (error) throw error;
 
-    const sectorIncludeFilter = []
-    // sectorIncludeFilter.push('cluster_01_sector001')
-    // sectorIncludeFilter.push('cluster_01_sector002')
-    // sectorIncludeFilter.push('cluster_01_sector003')
-    // sectorIncludeFilter.push('cluster_02_sector001')
-    // sectorIncludeFilter.push('cluster_06_sector001')
-    // sectorIncludeFilter.push('cluster_06_sector002')
-    // sectorIncludeFilter.push('cluster_45_sector001')
-    // sectorIncludeFilter.push('cluster_44_sector001')    
-    // sectorIncludeFilter.push('c409s01_sector001')
-    // sectorIncludeFilter.push('cluster_18_sector001')
+      initSectorData(document)
+    });
 
-
-    d3.xml("save_007.xml",  function(error, document) {
+    d3.xml("save_data\\save_007.xml",  function(error, document) {
       if (error) throw error;
 
       let sectorData = buildSectorData(document)
       let sectorConnections = buildSectorConnections(sectorData)
-
-
       console.log("sectorConnections found: " + sectorConnections.length)
 
       let plots = sectorData.map(function (sector) {
@@ -80,17 +103,17 @@
         }
       })
 
-      hexmap(d3.select("#sectorsGroup"), plots)
-
-      d3.select("#sectorsGroup").selectAll(".hexagon")
-      .attr("idx", function(d, i) { return i })
-      .on("click", function(event) {
-        var idxStr = d3.select(this).attr("idx")
-        console.log("draw scatter for: " + idxStr)
+      let onClick = function(event, node) {
+        var idxStr = node.attr("idx")
         if (idxStr == "") return;
         var selectedIdx = parseInt(idxStr)
+        console.log("draw scatter for: " + sectorData[selectedIdx].name)
+
         scatterPlot3d(sectorData[selectedIdx].components)
-      })
+
+      }
+
+      hexmap(d3.select("#sectorsGroup"), plots, onClick)
 
       // d3.select("#connection-chart")
       //   .selectAll("div")

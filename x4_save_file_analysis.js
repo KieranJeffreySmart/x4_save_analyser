@@ -1,159 +1,3 @@
-
-//   const sectorMetaData = [
-//   ['Great Reef', -18, -7, "cluster_603", 'sector001'],
-//   ['Barren Shores', -16, -8, "cluster_602", 'sector001'],
-//   ['Watchful Gaze', -14, -9, "cluster_601", 'sector001'],
-//   ['Ocean of Fantasy', -18, -3, "cluster_604", 'sector001'],
-//   ['Sanctuary of Darkness', -20, -8, "cluster_605", 'sector001'],
-//   ['Reflected Stars', -25, -9, "cluster_606", 'sector002'],
-//   ['Kingdom End 1', -24, -10, "cluster_606", 'sector001'],
-//   ['Towering Wave', -24, -9, "cluster_606", 'sector003'],
-//   ['Rolk\'s Demise', -26, -9, "cluster_607", 'sector001'],
-//   ['Menelaus\' Oasis', -26, -7, "cluster_609", 'sector001'],
-//   ['Atreus\'s Clouds', -24, -8, "cluster_608", 'sector001'],
-//   ['Mercury', -24, -4, "cluster_106", 'sector001'],
-//   ['Venus', -24, -2, "cluster_102", 'sector001'],
-//   ['Earth', -22, -3, "cluster_104", 'sector001'],
-//   ['Moon', -22, -2, "cluster_104", 'sector002'],
-//   ['Mars', -22, -1, "cluster_101", 'sector001'],
-//   ['Asteroid Belt', -20, 0, "cluster_100", 'sector001'],
-//   ['Adventure\'s Promise', -28, 0, "cluster_721", 'sector001'],
-//   ['Jupiter', -22, 3, "cluster_107", 'sector001'],
-//   ['Saturn 1', -24, 4, "cluster_108", 'sector001'],
-//   ['Saturn 2', -25, 5, "cluster_108", 'sector003'],
-//   ['Titan', -24, 5, "cluster_108", 'sector002'],
-//   ['Uranus', -26, 5, "cluster_109", 'sector001'],
-//   ['Neptune', -24, 6, "cluster_110", 'sector001'],
-//   ['Pluto', -26, 7, "cluster_111", 'sector001'],
-//   ['Oort Cloud', -28, 8, "cluster_116", 'sector001'],
-//   ['Circle of Deceit', -20, 10, "cluster_724", 'sector001'],
-//   ['Brennan\'s Triumph', -18, 7, "cluster_115", 'sector001'],
-//   ['Gian Prophecy', -16, 8, "cluster_114", 'sector001'],
-//   ['Segaris', -14, 7, "cluster_113", 'sector001'],
-//   ['Sanctum Verge', -10, 9, "cluster_722", 'sector001'],
-//   ['Mists of Artemis', -8, 8, "cluster_715", 'sector001'],
-//   ['Atiya\'s Misfortune I', -8, 6, "cluster_26", 'sector001'],
-//   ['Atiya\'s Misfortune III', -8, 7, "cluster_26", 'sector002'],
-//   ['Wretched Skies V Family Phi', -10, -9, "cluster_403", 'sector001'],
-//   ['Wretched Skies X', -12, -10, "cluster_422", 'sector001'],
-//   ['Litany of Fury XII', -16, -10, "cluster_423", 'sector001'],
-//   ['Litany of Fury IX', -16, -9, "cluster_423", 'sector001'],
-//   ['Wretched Skies IV Family Valka', -8, -10, "cluster_400", 'sector001'],
-//   ['Family Zhin', -4, -10, "cluster_401", 'sector001'],
-//   ['Family Kritt', -4, -12, "cluster_402", 'sector001'],
-//   ['Tharka\'s Cascade XV', -4, -7, "cluster_32", 'sector001'],
-//   ['Tharka\'s Cascade XVII', -4, -8, "cluster_32", 'sector002'],
-//   ['Matrix #79B', -6, -9, "cluster_33", 'sector001'],
-//   ['Argon Prime', -6, -3, "cluster_14", 'sector001'],
-//   ['Nopileos\' Fortune II', 4, 2, "cluster_04", 'sector001'],
-//   ['Nopileos\' Fortune VI', 4, 3, "cluster_04", 'sector001'],
-//   ['Grand Exchange I', 0, 1, "cluster_01", 'sector001'],
-//   ['Grand Exchange III', -1, 1, "cluster_01", 'sector002'],
-//   ['Grand Exchange IV', 0, 0, "cluster_01", 'sector003'],
-//   ['Leap of Faith', 2, -1, "cluster_504", 'sector001'],
-//   ['Eighteen Billion', 2, -3, "cluster_02", 'sector001'],
-//   ['Silent Witness I', 0, -6, "cluster_08", 'sector001'],
-//   ['Guiding Star VII', 10, -11, "cluster_416", 'sector002'],
-//   ['Guiding Star V', 10, -10, "cluster_416", 'sector001'],
-//   ['Eleventh Hour', 10, -15, "cluster_417", 'sector001'],
-//   ['Matrix #451', 14, -5, "cluster_16", 'sector001'],
-//   ['Frontier Edge', -10, 1, "cluster_49", 'sector001'],
-//   ['Black Hole Sun IV', -2, 1, "cluster_06", 'sector001'],
-//   ['Black Hole Sun V', -2, 2, "cluster_06", 'sector002'],
-//   ['Savage Spur I', -10, -5, "cluster_112", 'sector001'],
-//   ['Savage Spur II', -10, -4, "cluster_112", 'sector002'],
-//   ['Getsu Fune', -12, -4, "cluster_48", 'sector001'],
-//   ['Nopileos\' Memorial', -10, -3, "cluster_705", 'sector001'],
-//   ['Hatikvah\'s Faith', -8, -2, "cluster_706", 'sector001'],
-//   ['The Reach', -8, -4, "cluster_07", 'sector001'],
-//   ['Heretic\'s End', -10, -7, "cluster_31", 'sector001'],
-//   ['Antigone Memorial', -14, -1, "cluster_28", 'sector001'],
-//   ['The Void', -12, -2, "cluster_27", 'sector001'],
-//   ['Ore Belt', -12, 2, "cluster_720", 'sector001'],
-//   ['Third Redemption', -12, 0, "cluster_730", 'sector001'],
-//   ['Frontier Edge', -10, 1, "cluster_49", 'sector001'],
-//   ['Silent Witness XII', 0, -8, "cluster_45", 'sector001'],
-//   ['Silent Witness XI', 2, -7, "cluster_44", 'sector001'],
-//   ['Rhy\'s Defiance', -4, -14, "cluster_414", 'sector001'],
-//   ['Matrix #598', -4, -14, "cluster_415", 'sector001'],
-//   ['Matrix #101', -2, -7, "cluster_708", 'sector001'],
-//   ['Morning Star IV', -6, -7, "cluster_46", 'sector001'],
-//   ['Morning Star III', -6, -5, "cluster_30", 'sector001'],
-//   ['Hatikvah\'s Choice I', -4, -3, "cluster_29", 'sector001'],
-//   ['Hatikvah\'s Choice III', -4, -4, "cluster_29", 'sector002'],
-//   ['Windfall I Union Summit', 0, -4, "cluster_501", 'sector001'],
-//   ['Windfall III The Hoard', -2, -3, "cluster_502", 'sector001'],
-//   ['Windfall IV Aurora\'s Dream', -2, -1, "cluster_503", 'sector001'],
-//   ['Avarice I', 0, -2, "cluster_500", 'sector001'],
-//   ['Avarice V Dead End', 0, -1, "cluster_500", 'sector002'],
-//   ['Avarice IV', -1, -1, "cluster_500", 'sector003'],
-//   ['Second Contact II Flash Point', -4, 0, "cluster_13", 'sector001'],
-//   ['Second Contact VII', -6, 1, "cluster_40", 'sector001'],
-//   ['Second Contact XI', -6, -1, "cluster_41", 'sector001'],
-//   ['Path to Profit', 0, 2, "cluster_05", 'sector001'],
-//   ['True Sight', -4, 4, "cluster_12", 'sector001'],
-//   ['Holy Vision', -2, 5, "cluster_24", 'sector001'],
-//   ['Cardinal\'s Redress', -2, 7, "cluster_36", 'sector001'],
-//   ['Pontifex\'s Claim', 0, 6, "cluster_11", 'sector001'],
-//   ['Lasting Vengeance', 0, 8, "cluster_35", 'sector001'],
-//   ['Freedom\'s Reach', -2, 9, "cluster_714", 'sector001'],
-//   ['Tempting Fumes', 0, 12, "cluster_723", 'sector001'],
-//   ['Cardinal\'s Domain', 6, 9, "cluster_709", 'sector001'],
-//   ['Sacred Relic', 6, 7, "cluster_23", 'sector001'],
-//   ['Pious Mists XI', 4, 6, "cluster_38", 'sector001'],
-//   ['Pious Mists IV', 6, 5, "cluster_37", 'sector001'],
-//   ['Pious Mists II', 4, 4, "cluster_22", 'sector001'],
-//   ['Moo Kye\'s Revenge', 10, 7, "cluster_710", 'sector001'],
-//   ['Mi Ton\'s Refuge', 10, 5, "cluster_711", 'sector001'],
-//   ['Loomanckstrat\'s Legacy', 8, 4, "cluster_712", 'sector001'],
-//   ['Scale Plate Green I', 12, 5, "cluster_21", 'sector001'],
-//   ['Scale Plate Green VII', 12, 4, "cluster_21", 'sector002'],
-//   ['Turquoise Sea IX', 14, 3, "cluster_50", 'sector001'],
-//   ['Turquoise Sea X', 14, 4, "cluster_50", 'sector002'],
-//   ['Company Regard', 12, 2, "cluster_20", 'sector001'],
-//   ['Unholy Retribution', 8, 2, "cluster_10", 'sector001'],
-//   ['CEO\'s Doubt', 6, 1, "cluster_713", 'sector001'],
-//   ['Memory of Profit X', 4, 0, "cluster_39", 'sector001'],
-//   ['Memory of Profit IX', 4, -2, "cluster_03", 'sector001'],
-//   ['Trinity Sanctum VII', 6, -1, "cluster_47", 'sector001'],
-//   ['Trinity Sanctum III', 8, 0, "cluster_18", 'sector001'],
-//   ['Hewa\'s Twin I', 10, 2, "cluster_19", 'sector001'],
-//   ['Hewa\'s Twin II', 10, 1, "cluster_19", 'sector002'],
-//   ['Hewa\'s Twin III', 12, 0, "cluster_42", 'sector001'],
-//   ['Hewa\'s Twin IV The Core', 12, 1, "cluster_42", 'sector002'],
-//   ['Hewa\'s Twin V', 12, -1, "cluster_43", 'sector001'],
-//   ['Fires of Defeat', 16, -8, "cluster_421", 'sector001'],
-//   ['Family Tkr', 16, -6, "cluster_407", 'sector001'],
-//   ['Tharka\'s Ravine XXIV', 18, -7, "cluster_409", 'sector001'],
-//   ['Tharka\'s Ravine XVI', 20, -8, "cluster_410", 'sector001'],
-//   ['Tharka\'s Ravine VIII', 22, -7, "cluster_412", 'sector001'],
-//   ['Tharka\'s Ravine IV Tharka\'s Fall', 24, -8, "cluster_413", 'sector001'],
-//   ['Thuruk\'s Demise II First Impact', 16, -4, "cluster_408", 'sector002'],
-//   ['Thuruk\'s Demise III', 16, -3, "cluster_408", 'sector001'],
-//   ['Ianamus Zura VII', 14, -3, "cluster_15", 'sector001'],
-//   ['Ianamus Zura IV', 14, -2, "cluster_15", 'sector002'],
-//   ['Heart Of Acrimony II', 20, -10, "cluster_411", 'sector001'],
-//   ['Heart of Acrimony I The Boneyard', 18, -12, "cluster_425", 'sector001'],
-//   ['Mitsuno\'s Revelation', 16, -2, "cluster_701", 'sector001'],
-//   ['Mitsuno\'s Defiance', 18, -1, "cluster_702", 'sector001'],
-//   ['Mitsuno\'s Sacrifice', 18, -3, "cluster_703", 'sector001'],
-//   ['Matrix #9', 12, -6, "cluster_17", 'sector001'],
-//   ['Bright Promis', 8, -4, "cluster_09", 'sector001'],
-//   ['Profit Center Alpha', 6, -5, "cluster_34", 'sector001'],
-//   ['Two Grand', 8, -8, "cluster_420", 'sector001'],
-//   ['Open Market', 6, -9, "cluster_419", 'sector001'],
-//   ['Family Nhuut', 4, -10, "cluster_418", 'sector001'],
-//   ['Zyarth\'s Dominion I', 4, -12, "cluster_404", 'sector001'],
-//   ['Zyarth\'s Dominion IV', 6, -11, "cluster_405", 'sector001'],
-//   ['Zyarth\'s Dominion X', 6, -13, "cluster_406", 'sector001'],
-//   ['Emperor\'s Pride IV', 18, -11, "cluster_424", 'sector001'],
-//   ['Emperor\'s Pride VI', 18, -10, "cluster_424", 'sector002']
-// ]
-// sectorMetaData.sort((a, b) => a[3] - b[3])
-// var map = sectorMetaData.map(s => [s[0], Math.floor(s[1]/2), Math.floor(s[2]/2), s[3], s[4]])
-// console.log(JSON.stringify(map))
-
-
 const sortedSectorData = 
 [
  ["Great Reef",-9,-3,"cluster_603","sector001", 1],
@@ -190,6 +34,8 @@ const sortedSectorData =
  ["Mists of Artemis",-4,4,"cluster_715","sector001", 1],
  ["Atiya's Misfortune I",-4,3,"cluster_26","sector001", 7],
  ["Atiya's Misfortune III",-4,3,"cluster_26","sector002", 4],
+ ["Faulty Logic I", -2, 3,"cluster_25","sector001", 2],
+ ["Faulty Logic VII", -2, 3,"cluster_25","sector002", 5],
  ["Wretched Skies V Family Phi",-5,-5,"cluster_403","sector001", 1],
  ["Wretched Skies X",-6,-5,"cluster_422","sector001", 1],
  ["Litany of Fury XII",-8,-5,"cluster_423","sector002", 2],
@@ -346,9 +192,134 @@ factions.forEach(f => factionsIndex[f[0]] = f)
 const sectorMacroIndex = {}
 sortedSectorData.forEach(s => sectorMacroIndex[`${s[3]}_${s[4]}`] = s)
 
-clusterMetaData = {}
+const clusterMetaData = {}
 sortedSectorData.forEach(s => clusterMetaData[s[3]] = [s[2], s[1]])
 
+const zonePositionIndex = {}
+const gatePositionIndex = {}
+
+const componentTypes = [
+  { type: "station", color: `rgb(21,0,255)` },
+  { type: "datavault", color: `rgb(226, 4, 255)` },
+  { type: "gate", color: `rgb(255, 166, 0)` },
+  { type: "highwayentrygate", color: `rgb(4, 238, 255)` },
+  { type: "highwayexitgate", color: `rgb(169, 240, 245)` },
+  { type: "ship_xs", color: `rgb(251, 255, 0)` },
+  { type: "ship_s", color: `rgb(251, 255, 0)` },
+  { type: "ship_m", color: `rgb(251, 255, 0)` },
+  { type: "ship_l", color: `rgb(251, 255, 0)` },
+  { type: "ship_xl", color: `rgb(251, 255, 0)` },
+]
+
+const componentColorIndex = {}
+componentTypes.forEach(c => componentColorIndex[c.type] = c.color)
+
+const zoneFilter = [
+  "zone001_cluster_01_sector001_macro",
+  "zone002_cluster_01_sector001_macro",
+  "zone003_cluster_01_sector001_macro",
+  "zone004_cluster_01_sector001_macro",
+  "zone005_cluster_01_sector01_macro",
+]
+
+const stationFilter = [
+  "QFC-357", 
+  "HOB-359",
+  "IZH-824",
+  "OGT-108",
+  "BRO-048",
+  "ILF-184",
+  "OTR-418",
+  "VUX-649",
+  "GGG-799",
+  "ULR-649",
+  "CTJ-278",
+  "KQY-585",
+  "MGT-426",
+  "GGZ-221",
+  "TRH-952",
+  "BPN-720",
+  "NEC-953",
+  "HMN-539",
+]
+
+function initSectorData(document) {
+  try {
+    let sectoriterator = document.evaluate("/macros/macro/connections/connection[@ref='zones']", document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null)
+    var thissectorNode = sectoriterator.iterateNext();
+    while (thissectorNode) {
+      let zoneMacroNode = document.evaluate(
+        `macro`, 
+        thissectorNode, 
+        null, 
+        XPathResult.FIRST_ORDERED_NODE_TYPE, 
+        null
+      )?.singleNodeValue
+
+      let zonePosNode = document.evaluate(
+        `offset/position`, 
+        thissectorNode, 
+        null, 
+        XPathResult.FIRST_ORDERED_NODE_TYPE, 
+        null
+      )?.singleNodeValue
+
+      if (zoneMacroNode && zonePosNode) {
+        let macro = zoneMacroNode.getAttribute("ref").toLowerCase()
+        
+        let x = parseInt(zonePosNode.getAttribute("x") || "0")
+        let y = parseInt(zonePosNode.getAttribute("y") || "0")
+        let z = parseInt(zonePosNode.getAttribute("z") || "0")
+
+        zonePositionIndex[macro] = { x: x, y: y, z: z }
+      }
+
+      thissectorNode = sectoriterator.iterateNext();
+
+    }
+  }
+  catch (e) {
+    console.log(e)
+    dump( 'Error: Sectors document tree modified during iteration ' + e );
+  }
+}
+
+
+function initZoneData(document) {
+  try {
+    let gateiterator = document.evaluate("/macros/macro/connections/connection[@ref='gates']", document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null)
+    var gateNode = gateiterator.iterateNext();
+    while (gateNode) {
+      
+      let gateName = gateNode.getAttribute("name")
+
+      let gatePosNode = document.evaluate(
+        `offset/position`, 
+        gateNode, 
+        null, 
+        XPathResult.FIRST_ORDERED_NODE_TYPE, 
+        null
+      )?.singleNodeValue
+
+      if (gateName && gatePosNode) {
+        let name = gateName.toLowerCase()
+        
+        let x = parseInt(gatePosNode.getAttribute("x") || "0")
+        let y = parseInt(gatePosNode.getAttribute("y") || "0")
+        let z = parseInt(gatePosNode.getAttribute("z") || "0")
+
+        gatePositionIndex[name] = { x: x, y: y, z: z }
+      }
+
+      gateNode = gateiterator.iterateNext();
+
+    }
+  }
+  catch (e) {
+    console.log(e)
+    dump( 'Error: Sectors document tree modified during iteration ' + e );
+  }
+}
 
 
 function buildSectorData(document) {
@@ -358,7 +329,7 @@ function buildSectorData(document) {
       let sectoriterator = document.evaluate("/savegame/universe/component[@class='galaxy']/connections//component[@class='sector']", document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null)
       var thissectorNode = sectoriterator.iterateNext();
       while (thissectorNode) {
-        let macro = thissectorNode.getAttributeNode("macro").value;
+        let macro = thissectorNode.getAttribute("macro");
         let sector_key = macro.substring(0, macro.length - "_macro".length)
 
         if (!sectorMacroIndex[sector_key]) {
@@ -366,20 +337,13 @@ function buildSectorData(document) {
           continue;
         }
 
-        if (sectorIncludeFilter.length > 0) {
-          if (!sectorIncludeFilter.includes(sector_key)) {
-            thissectorNode = sectoriterator.iterateNext();
-            continue;
-          }
-        }
-
-        let factionKey = thissectorNode.getAttributeNode("owner").value
+        let factionKey = thissectorNode.getAttribute("owner")
         let faction = factionsIndex[factionKey]
 
         let sector = { 
-          sectorid: thissectorNode.getAttributeNode("id").value,
+          sectorid: thissectorNode.getAttribute("id"),
           macro: macro, 
-          code: thissectorNode.getAttributeNode("code").value,
+          code: thissectorNode.getAttribute("code"),
           owner: { color: faction ? faction[1] : "#5b5b5b", key: factionKey },
           node: thissectorNode,
         }
@@ -391,12 +355,10 @@ function buildSectorData(document) {
         ];
 
         sector.displayName = "sector "+sector.name+"(" + thissectorNode.getAttributeNode("code").value + ")", 
-        // console.log("found sector: "+sector.displayName+" owner: " + sector.owner.key + " " + sector.owner.color + "]")
         sector.components = []
-        appendSectorComponentData(document, sector.macro, "station", `rgb(21,0,255)`, sector.components)
-        appendSectorComponentData(document, sector.macro, "datavault", `rgb(21,255,0)`, sector.components)
+        sector.components = appendSectorComponentData(document, thissectorNode, sector.macro)
         sector.gates = []
-        appendSectorGateData(document, sector.macro, sector.gates)
+        
         sectors.push(sector);
         thissectorNode = sectoriterator.iterateNext();
 
@@ -409,136 +371,136 @@ function buildSectorData(document) {
     return sectors;
   }
 
-  function appendSectorComponentData(document, sectorMacro, classType, color, components) {  
-    let iterator = document.evaluate("/savegame/universe/component[@class='galaxy']/connections//component[@macro='"+sectorMacro+"']//component[@class='"+classType+"']", document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null)
-    var thisNode = iterator.iterateNext();
-    while (thisNode) {
-      let offsetNode = thisNode.getElementsByTagName("offset")[0]
-      let posNode = offsetNode.getElementsByTagName("position")[0]
+  function appendSectorComponentData(document, sectorNode) {
+    let components = []
+    
+    let zoneItterator = document.evaluate(
+      "connections/connection/component[@class='zone']", 
+      sectorNode, 
+      null, 
+      XPathResult.UNORDERED_NODE_ITERATOR_TYPE, 
+      null
+    )
 
-      let component = { 
-        componentid: thisNode.getAttributeNode("id").value,
-        macro: thisNode.getAttributeNode("macro").value, 
-        code: thisNode.getAttributeNode("code").value,
-        owner: thisNode.getAttributeNode("owner").value,
-        node: thisNode, 
-        displayName: classType + " (" + thisNode.getAttributeNode("code").value + ")",
-        x: (posNode && parseInt(posNode.getAttribute('x') || "0"))/10, 
-        y: (posNode && parseInt(posNode.getAttribute('y') || "0"))/10, 
-        z: (posNode && parseInt(posNode.getAttribute('z') || "0"))/10,
-        r: 2,
-        color: color
+    var zoneNode = zoneItterator.iterateNext();
+
+    while (zoneNode) {  
+
+      let zoneMacro = zoneNode.getAttribute("macro")
+      let zonePos = zonePositionIndex[zoneMacro]
+
+      if (!zonePos) {
+        zonePos = { x: 0, y: 0, z: 0 }
       }
 
-      components.push(component)
-      //console.log(classType + " found: code = " + component.code + " name = " + component.displayName)
+      let zonePosNode = document.evaluate(
+        `offset/position`, 
+        zoneNode, 
+        null, 
+        XPathResult.FIRST_ORDERED_NODE_TYPE, 
+        null
+      )?.singleNodeValue
 
-      thisNode = iterator.iterateNext();
-    }
-  }
+      if (zonePosNode) {
+        zonePos.x += parseInt(zonePosNode.getAttribute('x') || "0")
+        zonePos.y += parseInt(zonePosNode.getAttribute('y') || "0")
+        zonePos.z += parseInt(zonePosNode.getAttribute('z') || "0")
+      }
 
-  const clusterConnectionType = "clustergate"
-  const destinationConnectionType = "destination"
-  const highwayentryConnectionType = "highwayentry"
-  const highwayexitConnectionType = "highwayexit"
-  function appendSectorGateData(document, sectorMacro, gates) {  
-    let iterator = document.evaluate("/savegame/universe/component[@class='galaxy']/connections//component[@macro='"+sectorMacro+"']//component[@class='gate']", document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null)
-    var thisNode = iterator.iterateNext();
-    while (thisNode) {
-      let connectionsNode = thisNode.getElementsByTagName("connections")[0]
-      let connections = [];
+      let zone = {
+        macro: zoneMacro,
+        code: zoneNode.getAttribute("code"),
+        x: zonePos ? zonePos.x : 0,
+        y: zonePos ? zonePos.y : 0,
+        z: zonePos ? zonePos.z : 0,
+      }
 
-      if (connectionsNode) {
-        let connectionNodes = connectionsNode.getElementsByTagName("connection")
-        if (!connectionNodes) {
-          thisNode = iterator.iterateNext();
-          continue;
+      let classFilter = componentTypes.map(c => `@class='${c.type}'`).join(' or ')
+
+      let iterator = document.evaluate(
+        `connections/connection/component[${classFilter}]`,
+        zoneNode,
+        null,
+        XPathResult.UNORDERED_NODE_ITERATOR_TYPE, 
+        null
+      )
+
+      var thisNode = iterator.iterateNext();
+      while (thisNode) {
+
+        let thisCode = thisNode.getAttribute("code");
+
+        if (!thisCode) {
+          console.log("no code")
         }
-        if (connectionNodes.length == 0) {
-          thisNode = iterator.iterateNext();
-          continue;
+
+        let thisClass = thisNode.getAttributeNode("class").value;
+
+        let ownerAttr = thisNode.getAttributeNode("owner");
+        let ownerStr = ownerAttr ? ownerAttr.value : "none"
+
+        let x = 0
+        let y = 0
+        let z = 0
+
+        if (thisClass.substring(0, "ship".length) == "ship") {
+
+          if (ownerStr != "ownerless") {
+            thisNode = iterator.iterateNext();
+            continue;
+          }
+
         }
 
-        for(i = 0; i < connectionNodes.length; i++) {
+        if (thisClass == "gate") {
+          let parentConnection = thisNode.parentNode
+          if (parentConnection) {
+            let connectionName = parentConnection.getAttribute("connection")
+            let gatePos = gatePositionIndex[connectionName]
 
-          element = connectionNodes[i];
-          let connectedNodes = element.getElementsByTagName("connected")
-          if (connectedNodes.length == 0) {
-              return;
-          }
-          let connectionType = element.getAttributeNode("connection").value
-          if (!connectionType) {
-              return;
-          }
+            if (gatePos) {
+              x = gatePos.x
+              y = gatePos.y
+              z = gatePos.z
+            }
+            console.log("found a gate: " + connectionName)
+          }          
+        }
+        else {
+          let posNode = document.evaluate(
+            `offset/position`, 
+            thisNode, 
+            null, 
+            XPathResult.FIRST_ORDERED_NODE_TYPE, 
+            null
+          )?.singleNodeValue
 
-          connectionType = connectionType.startsWith(clusterConnectionType) ? clusterConnectionType
-          : connectionType.startsWith(destinationConnectionType) ? destinationConnectionType 
-          : connectionType.startsWith(highwayentryConnectionType) ? highwayentryConnectionType
-          : connectionType.startsWith(highwayexitConnectionType) ? highwayexitConnectionType : connectionType;
+          x = (posNode ? parseInt(posNode.getAttribute('x') || "0") : 0)
+          y = (posNode ? parseInt(posNode.getAttribute('y') || "0") : 0)
+          z = (posNode ? parseInt(posNode.getAttribute('z') || "0") : 0)
+        }
 
-          let connection = {
-              id: element.getAttributeNode("id").value,
-              type: connectionType,
-              connectedTo: connectedNodes[0].getAttributeNode("connection").value
-          }
-          connections.push(connection) 
-          //console.log("connection found: id = " + connection.id + " type = " + connection.type)
-        };
+        let component = { 
+          type: thisClass,
+          componentid: thisNode.getAttributeNode("id").value,
+          macro: thisNode.getAttributeNode("macro").value, 
+          code: thisCode,
+          owner: ownerStr,
+          node: thisNode, 
+          displayName: thisClass + " (" + thisCode + ")",
+          x: (x + zone.x), 
+          y: (y + zone.y), 
+          z: (z + zone.z),
+          r: 2,
+          color: ownerStr == "player" ? `rgb(21,255,0)` : componentColorIndex[thisClass]
+        }
+
+        components.push(component)
+        thisNode = iterator.iterateNext();
       }
 
-      let gate = { 
-        componentid: thisNode.getAttributeNode("id").value,
-        macro: thisNode.getAttributeNode("macro").value, 
-        code: thisNode.getAttributeNode("code").value,
-        node: thisNode, 
-        displayName: "gate (" + thisNode.getAttributeNode("code").value + ")",
-        x: 0, 
-        y: 0, 
-        z: 0,
-        r: 2,
-        color: "rgb(255,21,0)",
-        connections: connections
-      }
-
-      gates.push(gate)
-      //console.log("gate found: code = " + gate.code + " name = " + gate.displayName)
-
-      thisNode = iterator.iterateNext();
+      zoneNode = zoneItterator.iterateNext();
     }
-  }
 
-  function buildSectorConnections(sectors) {
-    var clusterconnections = []
-    sectors.forEach(sector => {
-        sector.gates.forEach(gate => {
-            gate.connections.forEach(connection => {
-                if (connection.type == clusterConnectionType){
-                    clusterConnection = { 
-                        type: connection.type, 
-                        from: { sector: sector, id: connection.id }, 
-                        to: { id: connection.connectedTo, sector: sector },
-                        displayText: sector.name + " to "
-                    }
-                    clusterconnections.push(clusterConnection)
-                    //console.log("cluster connection found: displayText = " + clusterConnection.displayText + " type = " + clusterConnection.type)
-                }
-            })
-        })
-    })
-
-    clusterconnections.forEach(connection => {
-        sectors.forEach(sector => {
-            sector.gates.forEach(gate => {
-                gate.connections.forEach(gateconnection => {
-                    if (connection.to.id == gateconnection.id){
-                        connection.to.sector = sector
-                        connection.displayText = connection.displayText + sector.name
-                        //console.log("cluster destination found: displayText = " + connection.displayText + " type = " + connection.type)
-                    }
-                })
-            })
-        })
-    })
-
-    return clusterconnections;
+    return components;
   }

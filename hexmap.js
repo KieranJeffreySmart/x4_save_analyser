@@ -1,4 +1,4 @@
-function hexmap(parent, plots) {
+function hexmap(parent, plots, onClick) {
     
     let scale = 1, a1 = 0, a2 = 0, p, w, h;
     var points = []
@@ -87,6 +87,8 @@ function hexmap(parent, plots) {
         .style("fill", function (d, i) { 
             return d.color;
          })
+         .attr("idx", function(d, i) { return i })
+         .on("click", function (e) { onClick && onClick(e, d3.select(this)) } )
 
         tg = g.append("g")
         .filter(function(d) {return (!d.image)})
