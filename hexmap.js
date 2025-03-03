@@ -58,7 +58,16 @@ function hexmap(parent, plots, onClick) {
                 break;
             }
         }
-        points.push({ x: x, y: y, title: plot.title, radius: scaledradius, color: plot.color, hasDatavault: plot.hasDatavault, hasOwnerlessShip: plot.hasOwnerlessShip})
+        points.push({ 
+            x: x, 
+            y: y, 
+            title: plot.title, 
+            radius: scaledradius, 
+            color: plot.color, 
+            hasDatavault: plot.hasDatavault, 
+            hasOwnerlessShip: plot.hasOwnerlessShip,
+            hasEnemy: plot.hasEnemy
+        })
     }
 
     var svg = parent
@@ -85,10 +94,27 @@ function hexmap(parent, plots, onClick) {
         })
         .attr("stroke-width", borderWidth + "px")
         .style("fill", function (d, i) { 
-            return "rgba(247, 253, 253, 0.25)";
+            return d.color;
          })
+         .attr("fill-opacity", "0.25")
          .attr("idx", function(d, i) { return i })
          .on("click", function (e) { onClick && onClick(e, d3.select(this)) } )
+         
+        g.append("path")
+         .attr("class", "hexagon")
+         .attr("d", function (d, i) {
+             return "M" + d.x + "," + d.y + hexbin.hexagon(d.radius-4);
+         })
+         .attr("stroke",  function (d, i) { 
+             return "red";
+         })
+         .attr("stroke-width", function (d, i) { 
+            if(d.hasEnemy) return "2px"
+            return "0px"
+         })
+         .attr("fill-opacity", "0")
+         .style("pointer-events", "none")
+
         g.append("line")
          .attr("x1", function (d, i) {
             return d.x + hexbin.hexagonTop(d.radius-4)[0][0];
@@ -110,12 +136,10 @@ function hexmap(parent, plots, onClick) {
             return "rgba(247, 253, 253, 0.25)";
           })
          .attr("stroke-width", function (d, i) { 
-            if(d.hasDatavault) {
-                return  "2px"
-            }
-
+            if(d.hasDatavault) return  "2px"
             return "0px";
           })
+          .style("pointer-events", "none")
 
          g.append("line")
          .attr("x1", function (d, i) {
@@ -144,6 +168,7 @@ function hexmap(parent, plots, onClick) {
 
             return "0px";
           })
+          .style("pointer-events", "none")
 
         
 
@@ -159,14 +184,16 @@ function hexmap(parent, plots, onClick) {
         .attr('x', function (d) { return d.x })
         .attr('y', function (d) { return d.y })
         .text(function (d, i) { return d.title; })
-        .call(getBB);   
+        .call(getBB)
+        .style("pointer-events", "none");   
 
         tg.insert("rect","text")
             .attr('x', function (d) { return d.bbox.x })
             .attr('y', function (d) { return d.bbox.y })
             .attr("width", function(d){return d.bbox.width})
             .attr("height", function(d){return d.bbox.height})
-            .style("fill", "black");
+            .style("fill", "black")
+            .style("pointer-events", "none");
         
         function getBB(selection) {
             selection.each(function(d){d.bbox = this.getBBox();})

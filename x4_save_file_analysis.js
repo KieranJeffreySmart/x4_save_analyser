@@ -154,10 +154,10 @@ const sortedSectorData =
 ]
 
 const factions = [
-  ["khaak", "#c90000"],
+  ["khaak", "rgb(255, 0, 0)"],
   ["court", "#5b5b5b"],
   ["civilian", "#5b5b5b"],
-  ["criminal", "#c90000"],
+  ["criminal", "rgb(255, 0, 0)"],
   ["argon", "#0079a5"],
   ["visitor", "#5b5b5b"],
   ["scavenger", "#005986"],
@@ -166,21 +166,21 @@ const factions = [
   ["pioneers", "#00c1d5"],
   ["freesplit", "#d58100"],
   ["holyorderfanatic", "#ffbaff"],
-  ["player", "rgb(17, 240, 51)"],
-  ["smuggler", "#c90000"],
+  ["player", "rgb(0, 255, 0)"],
+  ["smuggler", "rgb(255, 0, 0)"],
   ["split", "#d58100"],
   ["alliance", "#c530c5"],
   ["holyorder", "#ffbaff"],
-  ["scaleplate", "#c90000"],
-  ["xenon", "#c90000"],
+  ["scaleplate", "rgb(255, 0, 0)"],
+  ["xenon", "rgb(255, 0, 0)"],
   ["ministry", "#c5c500"],
   ["loanshark", "#b5a750"],
   ["boron", "#4cc6ff"],
   ["trinity", "#c530c5"],
   ["ownerless", "#5b5b5b"],
   ["paranid", "#c530c5"],
-  ["yaki", "#c90000"],
-  ["buccaneers", "#c90000"],
+  ["yaki", "rgb(255, 0, 0)"],
+  ["buccaneers", "rgb(255, 0, 0)"],
   ["terran", "#aad8ff"],
   ["teladi", "#c5c500"],
   ["hatikvah", "#50fFff"],
@@ -468,8 +468,7 @@ function buildSectorData(document) {
           sectorid: thissectorNode.getAttribute("id"),
           macro: macro, 
           code: thissectorNode.getAttribute("code"),
-          owner: { color: faction ? faction[1] : "#5b5b5b", key: factionKey },
-          node: thissectorNode,
+          owner: { color: faction ? faction[1] : "#5b5b5b", key: factionKey }
         }
         sector.name = identityIndex[macro].name;
         let sectorData = sectorMacroIndex[macro]
@@ -560,6 +559,7 @@ function buildSectorData(document) {
       while (thisNode) {
 
         let thisCode = thisNode.getAttribute("code");
+        let macro = thisNode.getAttribute("macro")
 
         if (!thisCode) {
           console.log("no code")
@@ -575,8 +575,12 @@ function buildSectorData(document) {
         let z = 0
 
         if (thisClass.substring(0, "ship".length) == "ship") {
+          if (ownerStr != "player" && ownerStr != "khaak" && ownerStr != "yaki" && ownerStr != "xenon" && ownerStr != "ownerless") {
+            thisNode = iterator.iterateNext();
+            continue;
+          }
 
-          if (ownerStr != "ownerless") {
+          if(ownerStr == "khaak" || ownerStr == "yaki" || ownerStr == "xenon" && (thisClass != "ship_l" && thisClass != "ship_xl")) {
             thisNode = iterator.iterateNext();
             continue;
           }
@@ -610,19 +614,60 @@ function buildSectorData(document) {
           z = (posNode ? parseInt(posNode.getAttribute('z') || "0") : 0)
         }
 
+
+        let stationType = ""
+
+        
+        if (thisClass == "station") {
+
+          if (macro.includes("factory")) {
+            let sourceNode = document.evaluate(
+              `source`, 
+              thisNode, 
+              null, 
+              XPathResult.FIRST_ORDERED_NODE_TYPE, 
+              null
+            )?.singleNodeValue
+
+            stationType = "factory"
+
+            if (sourceNode) {
+              let entryAttr = sourceNode.getAttribute("entry")
+              if (entryAttr) {
+                let split = entryAttr.split("_")
+                if (split.length > 1) stationType = split[1]
+              }
+            }
+
+          }
+
+          if (macro.includes("headquarters")) {
+            stationType = "Player HQ"
+          }
+          
+          if (macro.includes("tradestation")) {
+            stationType = "Trade Station"
+          }
+
+         }
+
+        let color = componentColorIndex[thisClass]
+        if (ownerStr == "khaak" || ownerStr == "yaki" || ownerStr == "xenon") color = "rgb(255, 0, 0)"
+        if (ownerStr == "player") color = "rgb(0, 255, 0)"
+
         let component = { 
           type: thisClass,
           componentid: thisNode.getAttributeNode("id").value,
-          macro: thisNode.getAttributeNode("macro").value, 
+          macro: macro, 
           code: thisCode,
           owner: ownerStr,
-          node: thisNode, 
+          stationType: stationType,
           displayName: thisClass + " (" + thisCode + ")",
           x: (x + zone.x), 
           y: (y + zone.y), 
           z: (z + zone.z),
-          r: 2,
-          color: ownerStr == "player" ? `rgb(21,255,0)` : componentColorIndex[thisClass]
+          r: 3,
+          color: color
         }
 
         components.push(component)

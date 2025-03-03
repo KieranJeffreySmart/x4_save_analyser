@@ -57,7 +57,7 @@
     <table width="100%">
       <tr>
         <td>
-          <svg id="universeSvg" width="75%" height="650" style="background-color: black;" stroke-width="2">
+          <svg id="universeSvg" width="75%" height="350" style="background-color: black;" stroke-width="2">
             <g id="sectorsGroup"></g>
           </svg>
         </td>
@@ -65,8 +65,22 @@
       <tr>
         <td>
           <svg id="sectorSvg"  width="100%"  height="650" style="background-color: black;" stroke-width="2">
-            <g id="sectornameGroup">
-              <text x="10", y="0" id="sectornameText" class="sectorTitle" text="Sector Name"></text>
+            <g id="sectornameGroup" transform="translate(10 10)">
+              <text 
+                id="sectornameText" 
+                class="sectorTitle" 
+                font-size="24px" 
+                font-weight="bold"
+                fill="white"
+                dominant-baseline="middle">
+              </text>
+            </g>
+            <g id="componentDetails" transform="translate(10 50)">
+                <text dy="4em" x="2em" 
+                font-size="16px" 
+                font-weight="bold"
+                fill="white"
+                dominant-baseline="middle"></text>
             </g>
             <g id="pointsGroup"></g>
             <g id="linesGroup"></g>
@@ -115,7 +129,7 @@
     
 
 
-    d3.xml("save_data\\test.xml",  function(error, document) {
+    d3.xml("save_data\\save_007.xml",  function(error, document) {
       if (error) throw error;
 
       let sectorData = buildSectorData(document)
@@ -123,11 +137,13 @@
       let plots = sectorData.map(function (sector) {
         let hasDatavault = false;
         let hasOwnerlessShip = false;
+        let hasEnemy = false;
 
         sector.components.forEach(c => {
           if (c.type == "datavault") hasDatavault = true
           if (c.type.substring(0, "ship".length) == "ship" && c.owner == "ownerless") hasOwnerlessShip = true
-        });   
+          if (c.owner == "khaak" || c.owner == "yaki" || c.owner == "xenon") hasEnemy = true
+        });
         return { 
           x: sector.plot[0], 
           y: sector.plot[1],
@@ -135,7 +151,8 @@
           title: sector.name,
           color: sector.owner.color,
           hasDatavault: hasDatavault,
-          hasOwnerlessShip: hasOwnerlessShip
+          hasOwnerlessShip: hasOwnerlessShip,
+          hasEnemy: hasEnemy
         }
       })
 

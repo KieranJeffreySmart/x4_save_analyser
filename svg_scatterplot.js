@@ -1,4 +1,5 @@
 function scatterPlot3d(data) {
+    var SVGexactTip = d3.select("g.tooltip.exact");
     console.log("draw scatter for components: " + data.length)
     let f = (x, z) => Math.cos(z/20)*20 + Math.sin(x/10)*10 + x/3*Math.atan2(z,x);
 
@@ -37,14 +38,48 @@ function scatterPlot3d(data) {
     }
 
     function render() {
-    if (a) for (var i=0; i<3; i++) 
-        xyz.forEach((c, j) => lines[i][0][c] = i==j ? -s : (lines[i][1]=a)[c]);
+    g = d3.select("#componentDetails");
+    g.selectAll("text").remove()
+    if (a) for (var i=0; i<3; i++) {
+        
+        g.append("text")
+        .attr("fill", "white")
+        .attr('font-size', "20px")
+        .attr("y", "1em")
+        .text(a.displayName)
+        g.append("text")
+        .attr("fill", "white")
+        .attr('font-size', "20px")
+        .attr("y", "2em")
+        .text(a.owner)
+        g.append("text")
+        .attr("fill", "white")
+        .attr('font-size', "20px")
+        .attr("y", "3em")
+        .text(a.stationType)
+        
+        g.append("text")
+        .attr("fill", "white")
+        .attr('font-size', "10px")
+        .attr("y", "8em")
+        .text(`[x: ${a.x} y: ${a.y} z: ${a.z}]`)
+    }
 
     data.forEach(project);	
     data.sort((a, b) => a.state.r - b.state.r);
     lines.forEach(line => line.forEach(project));	
     data.forEach((d, i) => Object.entries(d.state)
-        .forEach(e => {circles[i].setAttribute(...e); })); 
+        .forEach(p => {
+            circles[i].setAttribute(...p); 
+            if (d.isSelected) {
+                circles[i].setAttribute("stroke", "white");
+                circles[i].setAttribute("stroke-width", "1");
+            }
+            else {
+                circles[i].setAttribute("stroke", "");
+                circles[i].setAttribute("stroke-width", "0");
+            }
+        })); 
     data.forEach((d, i) => { 
             names[i].setAttribute("transform", "translate("+d.state.cx +","+d.state.cy+")")
             names[i].innerHTML = `
@@ -56,8 +91,19 @@ function scatterPlot3d(data) {
         `M${l[0].state.cx} ${l[0].state.cy} L${l[1].state.cx} ${l[1].state.cy}`));
     }
 
+    let ignoreClick = false;
+
     let evt = (t, f) => addEventListener(t, e => f(e) && render());
-    // evt('click', e => a = data[e.target.getAttribute('ind')]) 
+    evt('click', e => { 
+        if (!ignoreClick) {
+            if (a) a.isSelected = false;
+            a = data[e.target.getAttribute('ind')];
+            if (a) a.isSelected = true;
+        }
+
+        ignoreClick = false;
+        return true;
+    }) 
     evt('mouseup', e => 
         {
             p = null;
@@ -76,7 +122,7 @@ function scatterPlot3d(data) {
             a1 = p.a1-(e.x-p.x)/100;
             a2 = p.a2-(e.y-p.y)/100
 
-            console.log("a1:" + a1 + " a2:" + a2)
+            ignoreClick = true;
             return true;
         }
 
