@@ -78,7 +78,7 @@ const sortedSectorData =
  ["Silent Witness XII",0,-4,"cluster_45","sector001", 1],
  ["Silent Witness XI",1,-4,"cluster_44","sector001", 1],
  ["Rhy's Defiance",-2,-7,"cluster_414","sector001", 1],
- ["Matrix #598",-2,-7,"cluster_415","sector001", 1],
+ ["Matrix #598",-1,-8,"cluster_415","sector001", 1],
  ["Matrix #101",-1,-4,"cluster_708","sector001", 1],
  ["Morning Star IV",-3,-4,"cluster_46","sector001", 1],
  ["Morning Star III",-3,-3,"cluster_30","sector001", 1],
@@ -189,26 +189,30 @@ const factions = [
 const factionsIndex = {}
 factions.forEach(f => factionsIndex[f[0]] = f)
 
-const sectorMacroIndex = {}
-sortedSectorData.forEach(s => sectorMacroIndex[`${s[3]}_${s[4]}`] = s)
+const textValues = {}
 
-const clusterMetaData = {}
-sortedSectorData.forEach(s => clusterMetaData[s[3]] = [s[2], s[1]])
+const clusterIndex = {}
+
+const sectorMacroIndex = {}
+sortedSectorData.forEach(s => sectorMacroIndex[`${s[3]}_${s[4]}_macro`] = s)
+
+
+const identityIndex = {}
 
 const zonePositionIndex = {}
 const gatePositionIndex = {}
 
 const componentTypes = [
-  { type: "station", color: `rgb(21,0,255)` },
-  { type: "datavault", color: `rgb(226, 4, 255)` },
+  { type: "station", color: `rgb(0,0,255)` },
+  { type: "datavault", color: `rgb(226, 0, 255)` },
   { type: "gate", color: `rgb(255, 166, 0)` },
-  { type: "highwayentrygate", color: `rgb(4, 238, 255)` },
-  { type: "highwayexitgate", color: `rgb(169, 240, 245)` },
-  { type: "ship_xs", color: `rgb(251, 255, 0)` },
-  { type: "ship_s", color: `rgb(251, 255, 0)` },
-  { type: "ship_m", color: `rgb(251, 255, 0)` },
-  { type: "ship_l", color: `rgb(251, 255, 0)` },
-  { type: "ship_xl", color: `rgb(251, 255, 0)` },
+  { type: "highwayentrygate", color: `rgb(0, 166, 255)` },
+  { type: "highwayexitgate", color: `rgb(166, 225, 252)` },
+  { type: "ship_xs", color: `rgb(255, 255, 0)` },
+  { type: "ship_s", color: `rgb(255, 255, 0)` },
+  { type: "ship_m", color: `rgb(255, 255, 0)` },
+  { type: "ship_l", color: `rgb(255, 255, 0)` },
+  { type: "ship_xl", color: `rgb(255, 255, 0)` },
 ]
 
 const componentColorIndex = {}
@@ -242,6 +246,128 @@ const stationFilter = [
   "NEC-953",
   "HMN-539",
 ]
+
+function initNames(document) {
+  try {
+    let textiterator = document.evaluate("sectors/t", document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null)
+    var textNode = textiterator.iterateNext();
+    while (textNode) {
+      let id = textNode.getAttribute("id")
+      let innerText = textNode.textContent
+
+      if (innerText && innerText.substring(0, 1) == '{') {
+        innerTextSplit = innerText.split('(')
+        if (innerTextSplit.length > 1) {
+          innerText = innerTextSplit[1].substring(0, innerTextSplit[1].length-1);
+        }
+      }
+      
+      textValues[`{20004,${id}}`] = innerText
+
+      textNode = textiterator.iterateNext();
+    }
+  }
+  catch (e) {
+    console.log(e)
+    dump( 'Error: Sectors document tree modified during iteration ' + e );
+  }
+}
+
+function initDefaultData(document) {
+  try {
+    let datasetiterator = document.evaluate("defaults/dataset", document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null)
+    var datasetNode = datasetiterator.iterateNext();
+    while (datasetNode) {
+      let macro = datasetNode.getAttribute("macro").toLowerCase()
+      let identityNode = document.evaluate(
+        `properties/identification`, 
+        datasetNode, 
+        null, 
+        XPathResult.FIRST_ORDERED_NODE_TYPE, 
+        null
+      )?.singleNodeValue
+
+      if (macro && identityNode) {
+        let nameId = identityNode.getAttribute("name")
+        let name = textValues[nameId];
+        let descriptionId = identityNode.getAttribute("description")
+        let description = textValues[descriptionId];
+
+        let identity = {
+          macro: macro,
+          name: name,
+          description: description
+        }
+
+        identityIndex[macro] = identity
+
+      }
+
+      datasetNode = datasetiterator.iterateNext();
+    }
+  }
+  catch (e) {
+    console.log(e)
+    dump( 'Error: Sectors document tree modified during iteration ' + e );
+  }
+}
+
+function initGalaxyData(document) {
+  try {
+    let clustertiterator = document.evaluate("macros/macro/connections/connection[@ref = 'clusters']", document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null)
+    var clusterNode = clustertiterator.iterateNext();
+    while (clusterNode) {
+      let macroNode = document.evaluate(
+        `macro`, 
+        clusterNode, 
+        null, 
+        XPathResult.FIRST_ORDERED_NODE_TYPE, 
+        null
+      )?.singleNodeValue
+
+      if (macroNode) {
+        let clusterMacro = macroNode.getAttribute("ref").toLowerCase()
+
+        let clusterIdentity = identityIndex[clusterMacro]
+
+        if (clusterIdentity){
+          let posNode = document.evaluate(
+            `offset/position`, 
+            clusterNode, 
+            null, 
+            XPathResult.FIRST_ORDERED_NODE_TYPE, 
+            null
+          )?.singleNodeValue
+
+          if (posNode) {
+            let x = parseInt(posNode.getAttribute("x") || "0")
+            let y = parseInt(posNode.getAttribute("z") || "0")
+
+            if (x != 0) x = x / 15000000
+            if (y != 0) y = ((y - 8660000) / 8660000) * -1
+
+            clusterIndex[clusterMacro] = { x: x, y: y, name: clusterIdentity.name, description: clusterIdentity.description }
+          }
+          else {
+            clusterIndex[clusterMacro] = { x: 0, y: 0, name: clusterIdentity.name, description: clusterIdentity.description }
+          }
+        }
+        else {
+          console.log("couldn't find cluster: " + clusterMacro)
+
+        }
+
+      }
+
+      clusterNode = clustertiterator.iterateNext();
+    }
+  }
+    catch (e) {
+    console.log(e)
+    dump( 'Error: Sectors document tree modified during iteration ' + e );
+  }
+  
+}
 
 function initSectorData(document) {
   try {
@@ -312,7 +438,6 @@ function initZoneData(document) {
       }
 
       gateNode = gateiterator.iterateNext();
-
     }
   }
   catch (e) {
@@ -329,10 +454,9 @@ function buildSectorData(document) {
       let sectoriterator = document.evaluate("/savegame/universe/component[@class='galaxy']/connections//component[@class='sector']", document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null)
       var thissectorNode = sectoriterator.iterateNext();
       while (thissectorNode) {
-        let macro = thissectorNode.getAttribute("macro");
-        let sector_key = macro.substring(0, macro.length - "_macro".length)
+        let macro = thissectorNode.getAttribute("macro").toLowerCase();
 
-        if (!sectorMacroIndex[sector_key]) {
+        if (!identityIndex[macro]) {
           thissectorNode = sectoriterator.iterateNext();
           continue;
         }
@@ -347,12 +471,19 @@ function buildSectorData(document) {
           owner: { color: faction ? faction[1] : "#5b5b5b", key: factionKey },
           node: thissectorNode,
         }
-        sector.name = sectorMacroIndex[sector_key][0];
-        sector.plot = [
-          sectorMacroIndex[sector_key][1], 
-          sectorMacroIndex[sector_key][2], 
-          sectorMacroIndex[sector_key][5]
-        ];
+        sector.name = identityIndex[macro].name;
+        let sectorData = sectorMacroIndex[macro]
+
+        if (sectorData) {
+          sector.plot = [
+            sectorData[1], 
+            sectorData[2], 
+            sectorData[5]
+          ];
+        }
+        else {
+          console.log("missing plot data for: " + sector.name + "(" + macro + ")")
+        }
 
         sector.displayName = "sector "+sector.name+"(" + thissectorNode.getAttributeNode("code").value + ")", 
         sector.components = []
@@ -434,7 +565,7 @@ function buildSectorData(document) {
           console.log("no code")
         }
 
-        let thisClass = thisNode.getAttributeNode("class").value;
+        let thisClass = thisNode.getAttribute("class");
 
         let ownerAttr = thisNode.getAttributeNode("owner");
         let ownerStr = ownerAttr ? ownerAttr.value : "none"
@@ -463,7 +594,6 @@ function buildSectorData(document) {
               y = gatePos.y
               z = gatePos.z
             }
-            console.log("found a gate: " + connectionName)
           }          
         }
         else {

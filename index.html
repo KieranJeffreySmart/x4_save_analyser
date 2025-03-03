@@ -53,19 +53,24 @@
 </head>
 <body>
   <div class="dashboard">
-    <svg id="universeSvg" width="75%" height="250" style="background-color: black;" stroke-width="2"><g id="sectorsGroup"></g></svg>
     
-    <svg id="sectorSvg"  width="100%"  height="650" style="background-color: black;" stroke-width="2">
-      <g id="pointsGroup"></g>
-      <g id="linesGroup"></g>
-    </svg>
-    <table>
+    <table width="100%">
       <tr>
         <td>
+          <svg id="universeSvg" width="75%" height="650" style="background-color: black;" stroke-width="2">
+            <g id="sectorsGroup"></g>
+          </svg>
         </td>
       </tr>
       <tr>
         <td>
+          <svg id="sectorSvg"  width="100%"  height="650" style="background-color: black;" stroke-width="2">
+            <g id="sectornameGroup">
+              <text x="10", y="0" id="sectornameText" class="sectorTitle" text="Sector Name"></text>
+            </g>
+            <g id="pointsGroup"></g>
+            <g id="linesGroup"></g>
+          </svg>
         </td>
       </tr>
     </table>
@@ -73,33 +78,64 @@
   
   <script type="text/javascript">
     console.log("script");
-
-    d3.xml("sectors.xml",  function(error, document) {
-      if (error) throw error;
-
-      initSectorData(document)
-    });
     
-    d3.xml("zones.xml",  function(error, document) {
+    d3.xml("map_data\\names.xml",  function(error, document) {
       if (error) throw error;
 
-      initSectorData(document)
+      initNames(document)
+      d3.xml("map_data\\mapdefaults.xml",  function(error, document) {
+        if (error) throw error;
+
+        initDefaultData(document)
+            
+        d3.xml("map_data\\galaxy.xml",  function(error, document) {
+          if (error) throw error;
+
+          initGalaxyData(document)
+
+          d3.xml("map_data\\sectors.xml",  function(error, document) {
+            if (error) throw error;
+
+            initSectorData(document)
+
+            d3.xml("map_data\\zones.xml",  function(error, document) {
+              if (error) throw error;
+
+              initSectorData(document)
+            });
+          });
+        });
+      });
     });
 
-    d3.xml("save_data\\save_007.xml",  function(error, document) {
+
+
+
+
+    
+
+
+    d3.xml("save_data\\test.xml",  function(error, document) {
       if (error) throw error;
 
       let sectorData = buildSectorData(document)
-      let sectorConnections = buildSectorConnections(sectorData)
-      console.log("sectorConnections found: " + sectorConnections.length)
 
       let plots = sectorData.map(function (sector) {
+        let hasDatavault = false;
+        let hasOwnerlessShip = false;
+
+        sector.components.forEach(c => {
+          if (c.type == "datavault") hasDatavault = true
+          if (c.type.substring(0, "ship".length) == "ship" && c.owner == "ownerless") hasOwnerlessShip = true
+        });   
         return { 
           x: sector.plot[0], 
           y: sector.plot[1],
           clusterPos: sector.plot[2],
           title: sector.name,
-          color: sector.owner.color
+          color: sector.owner.color,
+          hasDatavault: hasDatavault,
+          hasOwnerlessShip: hasOwnerlessShip
         }
       })
 
@@ -108,6 +144,12 @@
         if (idxStr == "") return;
         var selectedIdx = parseInt(idxStr)
         console.log("draw scatter for: " + sectorData[selectedIdx].name)
+        d3.select("#sectornameText")
+        .text(sectorData[selectedIdx].name)
+        .attr('font-size', "20px")
+        .attr("font-weight", "bold")
+        .attr('fill', "white")
+        .attr('dominant-baseline', "middle")
 
         scatterPlot3d(sectorData[selectedIdx].components)
 

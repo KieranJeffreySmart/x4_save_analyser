@@ -50,6 +50,36 @@
           return [dx, dy];
         });
       }
+      
+      function hexagonTop(radius) {
+        var x0 = 0, y0 = 0;
+        var x1 = -Math.cos(d3_hexbinAngles[4]) * radius,
+            y1 = Math.sin(d3_hexbinAngles[4]) * radius,
+            dx = x1 - x0,
+            dy = y1 - y0;
+            x0 = x1, y0 = y1;
+
+          x1 = -Math.cos(d3_hexbinAngles[5]) * radius,
+          y1 = Math.sin(d3_hexbinAngles[5]) * radius
+        
+
+        return [[dx, dy],[x1, y1]];
+      }
+      
+      function hexagonBottom(radius) {
+        var x0 = 0, y0 = 0;
+        var x1 = -Math.cos(d3_hexbinAngles[1]) * radius,
+            y1 = Math.sin(d3_hexbinAngles[1]) * radius,
+            dx = x1 - x0,
+            dy = y1 - y0;
+            x0 = x1, y0 = y1;
+
+          x1 = -Math.cos(d3_hexbinAngles[2]) * radius,
+          y1 = Math.sin(d3_hexbinAngles[2]) * radius
+        
+
+        return [[dx, dy],[x1, y1]];
+      }
     
       hexbin.x = function(_) {
         if (!arguments.length) return x;
@@ -66,6 +96,16 @@
       hexbin.hexagon = function(radius) {
         if (arguments.length < 1) radius = r;
         return "m" + hexagon(radius).join("l") + "z";
+      };
+
+      hexbin.hexagonTop = function(radius) {
+        if (arguments.length < 1) radius = r;
+        return hexagonTop(radius);
+      };
+      
+      hexbin.hexagonBottom = function(radius) {
+        if (arguments.length < 1) radius = r;
+        return hexagonBottom(radius);
       };
     
       hexbin.centers = function() {

@@ -58,7 +58,7 @@ function hexmap(parent, plots, onClick) {
                 break;
             }
         }
-        points.push({ x: x, y: y, title: plot.title, radius: scaledradius, color: plot.color})
+        points.push({ x: x, y: y, title: plot.title, radius: scaledradius, color: plot.color, hasDatavault: plot.hasDatavault, hasOwnerlessShip: plot.hasOwnerlessShip})
     }
 
     var svg = parent
@@ -80,15 +80,72 @@ function hexmap(parent, plots, onClick) {
         .attr("d", function (d, i) {
             return "M" + d.x + "," + d.y + hexbin.hexagon(d.radius);
         })
-        .attr("stroke", function (d, i) { 
-            return "white";
-         })
+        .attr("stroke",  function (d, i) { 
+            return d.color;
+        })
         .attr("stroke-width", borderWidth + "px")
         .style("fill", function (d, i) { 
-            return d.color;
+            return "rgba(247, 253, 253, 0.25)";
          })
          .attr("idx", function(d, i) { return i })
          .on("click", function (e) { onClick && onClick(e, d3.select(this)) } )
+        g.append("line")
+         .attr("x1", function (d, i) {
+            return d.x + hexbin.hexagonTop(d.radius-4)[0][0];
+         })
+         .attr("y1", function (d, i) {
+            return d.y + hexbin.hexagonTop(d.radius-4)[0][1];
+         })
+         .attr("x2", function (d, i) {
+             return d.x + hexbin.hexagonTop(d.radius-4)[1][0];
+         })
+         .attr("y2", function (d, i) {
+             return d.y + hexbin.hexagonTop(d.radius-4)[1][1];
+         })
+         .attr("stroke", function (d, i) { 
+            if(d.hasDatavault) {
+                return "rgb(226, 0, 255)"
+            }
+
+            return "rgba(247, 253, 253, 0.25)";
+          })
+         .attr("stroke-width", function (d, i) { 
+            if(d.hasDatavault) {
+                return  "2px"
+            }
+
+            return "0px";
+          })
+
+         g.append("line")
+         .attr("x1", function (d, i) {
+            return d.x + hexbin.hexagonBottom(d.radius-4)[0][0];
+         })
+         .attr("y1", function (d, i) {
+            return d.y + hexbin.hexagonBottom(d.radius-4)[0][1];
+         })
+         .attr("x2", function (d, i) {
+             return d.x + hexbin.hexagonBottom(d.radius-4)[1][0];
+         })
+         .attr("y2", function (d, i) {
+             return d.y + hexbin.hexagonBottom(d.radius-4)[1][1];
+         })
+         .attr("stroke", function (d, i) { 
+            if(d.hasOwnerlessShip) {
+                return "rgb(255, 255, 0)"
+            }
+
+            return "rgba(247, 253, 253, 0.25)";
+          })
+         .attr("stroke-width", function (d, i) { 
+            if(d.hasOwnerlessShip) {
+                return  "2px"
+            }
+
+            return "0px";
+          })
+
+        
 
         tg = g.append("g")
         .filter(function(d) {return (!d.image)})
@@ -98,6 +155,7 @@ function hexmap(parent, plots, onClick) {
         .attr("font-weight", "bold")
         .attr('dominant-baseline', "middle")
         .attr('text-anchor', "middle")
+        .attr('fill', "white")
         .attr('x', function (d) { return d.x })
         .attr('y', function (d) { return d.y })
         .text(function (d, i) { return d.title; })
@@ -108,7 +166,7 @@ function hexmap(parent, plots, onClick) {
             .attr('y', function (d) { return d.bbox.y })
             .attr("width", function(d){return d.bbox.width})
             .attr("height", function(d){return d.bbox.height})
-            .style("fill", "white");
+            .style("fill", "black");
         
         function getBB(selection) {
             selection.each(function(d){d.bbox = this.getBBox();})
