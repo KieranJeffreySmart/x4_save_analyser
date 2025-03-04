@@ -645,6 +645,10 @@ function buildSectorData(document) {
             stationType = "Player HQ"
           }
           
+          if (macro.includes("piratebase")) {
+            stationType = "Priate HQ"
+          }         
+          
           if (macro.includes("tradestation")) {
             stationType = "Trade Station"
           }
