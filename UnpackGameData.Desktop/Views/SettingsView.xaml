@@ -1,0 +1,75 @@
+<UserControl
+    x:Class="X4SaveAnalyser.UnpackGameData.Desktop.Views.SettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <DockPanel Margin="8">
+
+        <!-- Save button -->
+        <StackPanel
+            DockPanel.Dock="Bottom"
+            HorizontalAlignment="Right"
+            Margin="0,8,0,0"
+            Orientation="Horizontal">
+            <Button Command="{Binding SaveCommand}" Content="Save Settings" />
+        </StackPanel>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Game folder -->
+            <Label Grid.Row="0" Content="X4 game folder (contains .cat/.dat and version.dat):" FontWeight="SemiBold" />
+            <DockPanel Grid.Row="1" Margin="0,2,0,8">
+                <Button
+                    DockPanel.Dock="Right"
+                    Margin="6,0,0,0"
+                    Click="BrowseGameFolder_Click"
+                    Content="Browse…" />
+                <TextBox x:Name="GameFolderBox" Text="{Binding GameFolder, UpdateSourceTrigger=PropertyChanged}" />
+            </DockPanel>
+
+            <!-- Detected version -->
+            <Label Grid.Row="2" Content="Detected game version:" FontWeight="SemiBold" />
+            <TextBox
+                x:Name="GameVersionBox"
+                Grid.Row="3"
+                Margin="0,2,0,8"
+                IsReadOnly="True"
+                Foreground="Gray"
+                Text="{Binding DetectedVersion, Mode=OneWay}" />
+
+            <!-- Save folder -->
+            <Label Grid.Row="4" Content="X4 save folder (contains .xml.gz save files):" FontWeight="SemiBold" />
+            <DockPanel Grid.Row="5" Margin="0,2,0,8">
+                <Button
+                    DockPanel.Dock="Right"
+                    Margin="6,0,0,0"
+                    Click="BrowseSaveFolder_Click"
+                    Content="Browse…" />
+                <TextBox Text="{Binding SaveFolder, UpdateSourceTrigger=PropertyChanged}" />
+            </DockPanel>
+
+            <!-- Output folder -->
+            <Label Grid.Row="6" Content="Root output folder:" FontWeight="SemiBold" />
+            <DockPanel Grid.Row="7" Margin="0,2,0,8">
+                <Button
+                    DockPanel.Dock="Right"
+                    Margin="6,0,0,0"
+                    Click="BrowseOutputFolder_Click"
+                    Content="Browse…" />
+                <TextBox Text="{Binding OutputFolder, UpdateSourceTrigger=PropertyChanged}" />
+            </DockPanel>
+
+        </Grid>
+    </DockPanel>
+</UserControl>

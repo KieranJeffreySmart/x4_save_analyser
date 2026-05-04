@@ -13,19 +13,22 @@
 
 ## In Progress
 
+*Nothing actively in progress — pick from To Do below.*
 
 ## To Do
 
-### Game data unpacking
-- [ ] Add progress output to `unpack-game-data.py` (file count / bytes extracted) so the user knows it's working on large archives
-- [ ] Fix unclosed file handle — `inf_data` is opened but never explicitly closed in `unpack-game-data.py`
-- [ ] Add validation that the `.dat` file exists alongside the `.cat` before trying to open it
+### Game data unpacking (Python scripts)
+> **Note:** The C# `ArchiveExtractor` in `UnpackGameData.Core` has already addressed progress output, file handle safety, and `.dat` validation. The items below apply only if the Python script is still being maintained.
 - [ ] `extract.bat` has hardcoded absolute paths — make them relative so the repo works from any location
+- [x] ~~Add progress output~~ — done in C# port
+- [x] ~~Fix unclosed file handle~~ — done in C# port
+- [x] ~~Add .dat validation~~ — done in C# port
 
-### Save file cleaning
+### Save file cleaning (Python scripts)
+> **Note:** The C# `UniverseExtractor` in `UnpackGameData.Core` has addressed all of the items below.
 - [ ] `extract-save-file.bat` has hardcoded absolute paths — make them relative
-- [ ] Add pretty-print / indented output option to `clean-save-file.py` so the resulting XML is easier to inspect
-- [ ] Add a check that the source file exists and is a valid XML file before processing
+- [x] ~~Add pretty-print option~~ — done in C# port
+- [x] ~~Add source file validation~~ — done in C# port
 
 ### Universe hex map
 - [ ] Sector name labels are set to `font-size: 2px` — they are effectively invisible; increase to a readable size
@@ -61,3 +64,50 @@
 ## Done
 
 - Updated README with full project summary, script descriptions, data directory layout, and getting started guide
+- Created `WIP.md` (this file) and `CHAT_CONTEXT.md` for cross-session continuity
+- **C# solution created** (`x4_save_analyser.sln`) with three projects:
+  - `UnpackGameData.Core` (net10.0) — `ArchiveExtractor`, `UniverseExtractor`, shared models
+  - `UnpackGameData` (net10.0) — console app wrapping Core
+  - `UnpackGameData.Desktop` (net10.0-windows) — full WPF MVVM app
+- Full MVVM desktop app implemented: Settings tab, Unpack Archives tab, Extract Universe tab
+- Settings persistence to `%AppData%\X4SaveAnalyser\settings.json`
+- All three projects build cleanly against .NET SDK 10.0.203
+
+---
+
+## C# Desktop App — `UnpackGameData.Desktop`
+
+A WPF desktop application replacing the Python scripts for game data extraction and save file processing.
+
+### Completed
+
+- **`UnpackGameData.Core` — `ArchiveExtractor`**
+  - Extracts files from X4 `.cat`/`.dat` archive pairs into a destination directory
+  - Supports regex filtering (default: `xml|xsd|html|js|css|lua`)
+  - Recursively searches subdirectories for `.cat` files (`SearchOption.AllDirectories`)
+  - Mirrors the subfolder structure of the source into the output — a `.cat` found at `ego_core/01.cat` extracts into `{dest}/ego_core/`
+  - Progress reporting with extracted/skipped counts per archive
+  - Async with cancellation support
+
+- **`UnpackGameData.Core` — `UniverseExtractor`**
+  - Streams through an X4 save file to find and extract the `<universe>` element
+  - Detects gzip compression via magic bytes (`1F 8B`) — handles both `.xml.gz` and plain `.xml` saves without relying on file extension
+  - Wraps output in `<savegame>` and writes to a specified output path
+  - Progress reporting; async with cancellation support
+
+- **`UnpackGameData.Desktop` — WPF UI (MVVM)**
+  - **Settings tab**: configure game folder, save folder, and root output folder; persists to `%AppData%\X4SaveAnalyser\settings.json`; auto-detects and displays game version from `version.dat`
+  - **Unpack Archives tab**: shows game folder and auto-derived output path (`{output}/game/{version}`) as read-only display labels; regex filter in Advanced options; scrollable log; Cancel button
+  - **Extract Universe tab**: single **Select file…** button opening in the configured save folder; auto-derived output path displayed as a read-only label; Extract enabled only once a valid file is chosen
+  - **MVVM architecture**: `ViewModelBase`, `RelayCommand`, `SettingsViewModel`, `ArchiveExtractorViewModel`, `UniverseExtractorViewModel`, `MainViewModel`; each tab is a separate `UserControl` in `Views/`; `MainWindow` is a 10-line shell; dialogs handled in view code-behind (pragmatic MVVM)
+  - Settings saved event propagates to both extractor VMs via `MainViewModel`
+
+### To Do — Desktop App
+
+- [ ] Test against the real X4 installation at `D:\SteamLibrary\steamapps\common\X4 Foundations`
+- [ ] Test universe extraction against real gzip saves in `C:\Users\KieranSmart\OneDrive\Documents\Egosoft\X4\99208493\save`
+- [ ] Consider a **Batch Universe Extract** mode — extract universe from all saves in the save folder in one go
+- [ ] Add a **diff / compare** view between two extracted universe files to show what changed between saves
+- [ ] Package as a single-file self-contained executable for distribution
+- [ ] Add `IsBusy` indicator (spinner or progress bar) to the tab header or status bar so long operations are visually obvious
+- [ ] Disable tab switching while an extraction is running (currently the tab control is disabled wholesale — consider only disabling the other tabs)
