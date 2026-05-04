@@ -15,6 +15,7 @@ public sealed class UniverseExtractorViewModel : ViewModelBase
     private bool _isBusy;
     private string _saveFolder = string.Empty;
     private string _outputFolder = string.Empty;
+    private string _gameFolder = string.Empty;
     private CancellationTokenSource? _cts;
     private readonly StringBuilder _logBuilder = new();
 
@@ -85,6 +86,7 @@ public sealed class UniverseExtractorViewModel : ViewModelBase
     {
         _saveFolder   = settings.SaveFolder;
         _outputFolder = settings.OutputFolder;
+        _gameFolder   = settings.GameFolder;
         OnPropertyChanged(nameof(SaveFolder));
         UpdateDestPath();
     }
@@ -118,8 +120,31 @@ public sealed class UniverseExtractorViewModel : ViewModelBase
 
         try
         {
+            // Step 1 — extract the <universe> element to universe.xml
             await UniverseExtractor.ExtractAsync(_sourceFile, _destFile, progress, _cts.Token);
-            StatusCallback?.Invoke($"Done \u2014 universe saved to {Path.GetFileName(_destFile)}.");
+
+            // Step 2 — analyse the extracted file and write JSON data files
+            //           alongside the universe.xml in the same output directory
+            string? analysisDir = Path.GetDirectoryName(_destFile);
+            if (!string.IsNullOrEmpty(analysisDir))
+            {
+                // Locate unpacked game data sector XMLs to enable correct zone offset calculation.
+                // Path: {outputFolder}/game/{version}/maps/xu_ep2_universe/sectors/
+                string? sectorsDir = null;
+                if (!string.IsNullOrEmpty(_outputFolder) && !string.IsNullOrEmpty(_gameFolder))
+                {
+                    string gameDataRoot = SettingsService.GetGameOutputFolder(_outputFolder, _gameFolder);
+                    string candidate = Path.Combine(gameDataRoot, "maps", "xu_ep2_universe", "sectors");
+                    if (Directory.Exists(candidate))
+                        sectorsDir = candidate;
+                }
+
+                AppendLog(string.Empty);
+                AppendLog("--- Analysing universe data ---");
+                await SaveDataAnalyser.AnalyseAsync(_destFile, analysisDir, sectorsDir, progress, _cts.Token);
+            }
+
+            StatusCallback?.Invoke($"Done \u2014 universe and analysis saved to {Path.GetFileName(analysisDir ?? _destFile)}.");
         }
         catch (OperationCanceledException)
         {

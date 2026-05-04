@@ -47,7 +47,7 @@
             </DockPanel>
 
             <!-- Output: auto-derived, read-only -->
-            <Label Grid.Row="2" Content="Output file (auto: {output root}\saves\{yyyy-MM-dd-HH-mm}\{name}\universe.xml):" FontWeight="SemiBold" />
+            <Label Grid.Row="2" Content="Output folder (auto: {output root}\saves\{yyyy-MM-dd-HH-mm}\{name}\  →  universe.xml + sectors.json + stations.json + ships.json + gates.json):" FontWeight="SemiBold" />
             <TextBlock
                 Grid.Row="3"
                 Margin="0,2,0,8"

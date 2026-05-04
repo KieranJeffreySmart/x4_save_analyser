@@ -16,22 +16,64 @@ This document maintains context across chat sessions for the `x4_save_analyser` 
 | X4 game install | `D:\SteamLibrary\steamapps\common\X4 Foundations` |
 | X4 save files | `C:\Users\KieranSmart\OneDrive\Documents\Egosoft\X4\99208493\save` |
 | Settings JSON (app) | `%AppData%\X4SaveAnalyser\settings.json` |
+| Web app | `c:\Repos\x4_save_analyser\webapp\` — `npm run dev` to start |
 
 **Current repo state (as of last session):**
-- `UnpackGameData.Core/` — Core library. Has `ArchiveExtractor.cs`, `UniverseExtractor.cs`, `Models.cs`. Builds cleanly.
+- `UnpackGameData.Core/` — `ArchiveExtractor.cs`, `UniverseExtractor.cs`, `SaveDataAnalyser.cs`, `Models.cs`. Builds cleanly.
 - `UnpackGameData/` — Console app. Thin wrapper over Core. Builds cleanly.
-- `UnpackGameData.Desktop/` — Full WPF MVVM app. Has `Views/`, `ViewModels/`, `AppSettings.cs`, `SettingsService.cs`. Builds cleanly. **Not yet tested against real game files.**
-- Original Python scripts (`unpack-game-data.py`, `clean-save-file.py`) still present in the root — kept for reference but superseded by the C# port.
-- Browser-based visualiser (`index.html`, `x4_save_file_analysis.js`, `hexmap.js`, etc.) is unchanged from the original — has known bugs logged in `WIP.md`.
+- `UnpackGameData.Desktop/` — Full WPF MVVM app. Tabs: Unpack Archives, Extract Universe, Settings. Extract Universe now runs both `UniverseExtractor` AND `SaveDataAnalyser` in one operation. Builds cleanly.
+- `webapp/` — **React web app** (Vite 5 + React 18 + TypeScript + Tailwind + Recharts + D3 v7). Replaces the old `index.html` HTML app. No compile errors.
+- Old HTML visualiser (`index.html`, `x4_save_file_analysis.js`, `hexmap.js`, etc.) — still present for reference; has known bugs logged in `WIP.md`.
 
-**Recommended next steps** (see `WIP.md` for full To Do list):
-1. Run the desktop app against the real X4 installation and save folder to validate end-to-end.
-2. Fix the `initZoneData` bug in `index.html` (currently calls `initSectorData` twice — gate positions not loading).
-3. Fix the invisible sector labels (`font-size: 2px`) in `hexmap.js`.
+**Recommended next steps:**
+1. Re-run Extract Universe on a save file (with game data unpacked first so sector/zone XMLs are present at `{output}\game\{version}\maps\xu_ep2_universe\`) to regenerate JSON with correct zone+gate positions.
+2. Load the JSON in `webapp/` and verify scatter plot component positions visually.
+3. See `WIP.md` for full To Do list.
 
 ---
 
-# Session 2 — C# Desktop App Build Session (more recent)
+# Session 3 — Save Data Analysis + React Web App
+
+## What Was Done
+
+### C# — `SaveDataAnalyser` (new file in `UnpackGameData.Core`)
+- Mirrors `x4_save_file_analysis.js` logic in C#
+- Walks `galaxy → cluster → sector → zone → component` in the extracted universe XML
+- Applies the same ship filter as the JS (player/khaak/yaki/xenon/ownerless; hostile factions L/XL only)
+- Resolves station type from macro name (factory/headquarters/piratebase/tradestation)
+- **Zone position** = static base offset from `sectors/*.xml` (`BuildZonePositionIndex`) + runtime offset from save XML — mirrors JS `zonePositionIndex` / `initSectorData`
+- **Gate position** = zone base + static gate offset from `zones/*.xml` (`BuildGatePositionIndex`) — mirrors JS `gatePositionIndex` / `initZoneData` (this was the missing `initZoneData` bug noted in WIP)
+- Game data dirs are inferred: `sectorsDir` passed explicitly; `zonesDir` = sibling `zones/` folder
+- Writes `sectors.json`, `stations.json`, `ships.json`, `gates.json` to the output dir
+- Data records: `SectorRecord` (id, macro, code, owner, componentCount), `ComponentRecord` (type, id, macro, code, owner, stationType, connectionName, sectorMacro, x, y, z)
+
+### C# — `UniverseExtractorViewModel` changes
+- Stores `_gameFolder` from `ApplySettings`
+- At extraction time resolves `sectorsDir` = `{outputFolder}\game\{version}\maps\xu_ep2_universe\sectors\`
+- Calls `SaveDataAnalyser.AnalyseAsync` after `UniverseExtractor.ExtractAsync`; passes `sectorsDir` (or null if not found)
+
+### React Web App (`webapp/`)
+Built from scratch with Vite 5 + React 18 + TypeScript 5.4 + Tailwind CSS 3.4 + Recharts 2.13 + D3 v7.
+
+**Key files:**
+
+| File | Purpose |
+|---|---|
+| `src/types.ts` | `SectorRecord`, `ComponentRecord`, `SaveData`, `HexCell` |
+| `src/data/factions.ts` | All X4 faction colour/label mappings; `getFactionColor`, `getFactionLabel`, `HOSTILE` set |
+| `src/data/sectorPositions.ts` | Static hex grid positions for all 151 sectors (name, gridX, gridY, macro, clusterPos) |
+| `src/components/FilePicker.tsx` | File System Access API file picker (Chrome/Edge) + manual multi-file fallback |
+| `src/components/HexMap.tsx` | SVG hex grid; pan/zoom via viewBox; faction colours; enemy/datavault/ownerless indicators; hover tooltip; click to select; sector labels truncated at 30 chars with dynamic font-size |
+| `src/components/ScatterPlot.tsx` | 3D perspective scatter plot; drag-rotate; scroll-zoom; real-world km axis ticks; axis show/hide toggle (halved opacity when visible); selection state lifted to parent (`selectedId` / `onSelect` props) |
+| `src/components/SectorPanel.tsx` | Right panel: ScatterPlot + by-type/owner summaries + full component table; clicking a table row highlights the matching dot on the plot (shared `selectedId` state) |
+| `src/components/StatsPanel.tsx` | Summary cards + horizontal Recharts bar charts (sectors/stations/ships by faction) |
+| `src/App.tsx` | Root — layout, Galaxy Map / Statistics tabs, state, 760px side panel |
+
+**Known issue:** Scatter plot component positions still appear incorrect after the zone/gate offset fixes. Needs re-extraction with game data present and visual verification.
+
+---
+
+# Session 2 — C# Desktop App Build Session
 
 This document summarises the key decisions, architecture, and implementation details from the session that produced the `UnpackGameData.Desktop` WPF application. Use it to bring a new chat up to speed quickly.
 
