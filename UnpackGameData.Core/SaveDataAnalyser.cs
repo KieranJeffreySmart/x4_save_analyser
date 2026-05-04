@@ -15,10 +15,10 @@ public static class SaveDataAnalyser
         "ship_xs", "ship_s", "ship_m", "ship_l", "ship_xl"
     };
 
-    // Matches the JS componentTypes array
+    // Matches the JS componentTypes array, plus lockbox and object (erlking vaults)
     private static readonly HashSet<string> TrackedClasses = new(StringComparer.OrdinalIgnoreCase)
     {
-        "station", "datavault", "gate", "highwayentrygate", "highwayexitgate",
+        "station", "datavault", "object", "lockbox", "gate", "highwayentrygate", "highwayexitgate",
         "ship_xs", "ship_s", "ship_m", "ship_l", "ship_xl"
     };
 
@@ -99,6 +99,7 @@ public static class SaveDataAnalyser
         var stations      = new List<ComponentRecord>();
         var ships         = new List<ComponentRecord>();
         var gates         = new List<ComponentRecord>();
+        var lockboxes     = new List<ComponentRecord>();
 
         // galaxy -> (any depth) sector elements
         foreach (XElement sectorEl in galaxy.Descendants()
@@ -141,6 +142,11 @@ public static class SaveDataAnalyser
                     string compCode  = compEl.Attribute("code")?.Value  ?? string.Empty;
                     string compOwner = compEl.Attribute("owner")?.Value ?? string.Empty;
 
+                    // class="object" is only tracked for erlking vaults (macro prefix landmarks_erlking_vault)
+                    bool isObjectClass = string.Equals(compClass, "object", StringComparison.OrdinalIgnoreCase);
+                    if (isObjectClass && !compMacro.StartsWith("landmarks_erlking_vault", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
                     bool isShip = ShipClasses.Contains(compClass);
 
                     // Mirror the JS ship filter
@@ -153,6 +159,15 @@ public static class SaveDataAnalyser
                         if (isHostile && !LargeShipClasses.Contains(compClass))
                             continue;
                     }
+
+                    // Capture extra save-file attributes
+                    string? compName      = compEl.Attribute("name")?.Value;
+                    string? compState     = compEl.Attribute("state")?.Value;  // e.g. "wreck"
+                    string? compSpawnTime = compEl.Attribute("spawntime")?.Value;
+                    // knownto="player" on ships/datavaults; known="1" on lockboxes
+                    bool knownToPlayer    = string.Equals(compEl.Attribute("knownto")?.Value, "player",
+                                               StringComparison.OrdinalIgnoreCase)
+                                        || compEl.Attribute("known")?.Value == "1";
 
                     double compX = zoneX;
                     double compY = zoneY;
@@ -186,9 +201,11 @@ public static class SaveDataAnalyser
                     string stationType = string.Empty;
                     if (string.Equals(compClass, "station", StringComparison.OrdinalIgnoreCase))
                         stationType = ResolveStationType(compEl, compMacro);
+                    else if (isObjectClass)
+                        stationType = "erlking_vault";
 
                     var record = new ComponentRecord(
-                        Type:           compClass,
+                        Type:           isObjectClass ? "datavault" : compClass,  // normalise erlking vaults
                         Id:             compId,
                         Macro:          compMacro,
                         Code:           compCode,
@@ -198,15 +215,26 @@ public static class SaveDataAnalyser
                         SectorMacro:    sectorMacro,
                         X:              compX,
                         Y:              compY,
-                        Z:              compZ);
+                        Z:              compZ,
+                        Name:           string.IsNullOrEmpty(compName) ? null : compName,
+                        State:          string.IsNullOrEmpty(compState) ? null : compState,
+                        KnownToPlayer:  knownToPlayer ? true : null,
+                        SpawnTime:      double.TryParse(compSpawnTime,
+                                            System.Globalization.NumberStyles.Any,
+                                            System.Globalization.CultureInfo.InvariantCulture, out double st)
+                                        ? st : null);
 
                     sectorRecord.ComponentCount++;
+
+                    bool isLockbox = string.Equals(compClass, "lockbox", StringComparison.OrdinalIgnoreCase);
 
                     if (isShip)
                         ships.Add(record);
                     else if (isGate || string.Equals(compClass, "highwayentrygate", StringComparison.OrdinalIgnoreCase)
                                     || string.Equals(compClass, "highwayexitgate", StringComparison.OrdinalIgnoreCase))
                         gates.Add(record);
+                    else if (isLockbox)
+                        lockboxes.Add(record);
                     else
                         stations.Add(record);
                 }
@@ -215,16 +243,17 @@ public static class SaveDataAnalyser
 
         progress?.Report(
             $"Found {sectors.Count} sectors, {stations.Count} stations/vaults, " +
-            $"{ships.Count} notable ships, {gates.Count} gates/highways.");
+            $"{ships.Count} notable ships, {gates.Count} gates/highways, {lockboxes.Count} lockboxes.");
 
         cancellationToken.ThrowIfCancellationRequested();
 
         Directory.CreateDirectory(outputDir);
 
-        WriteJson(Path.Combine(outputDir, "sectors.json"),  sectors,  progress, cancellationToken);
-        WriteJson(Path.Combine(outputDir, "stations.json"), stations, progress, cancellationToken);
-        WriteJson(Path.Combine(outputDir, "ships.json"),    ships,    progress, cancellationToken);
-        WriteJson(Path.Combine(outputDir, "gates.json"),    gates,    progress, cancellationToken);
+        WriteJson(Path.Combine(outputDir, "sectors.json"),   sectors,   progress, cancellationToken);
+        WriteJson(Path.Combine(outputDir, "stations.json"),  stations,  progress, cancellationToken);
+        WriteJson(Path.Combine(outputDir, "ships.json"),     ships,     progress, cancellationToken);
+        WriteJson(Path.Combine(outputDir, "gates.json"),     gates,     progress, cancellationToken);
+        WriteJson(Path.Combine(outputDir, "lockboxes.json"), lockboxes, progress, cancellationToken);
 
         progress?.Report("Analysis complete.");
     }
@@ -403,17 +432,25 @@ public sealed class SectorRecord
 }
 
 /// <summary>
-/// A single tracked component (station, data vault, ship, gate, or highway gate).
+/// A single tracked component (station, data vault, erlking vault, lockbox, ship, gate, or highway gate).
 /// </summary>
 public sealed record ComponentRecord(
-    [property: JsonPropertyName("type")]           string  Type,
-    [property: JsonPropertyName("id")]             string  Id,
-    [property: JsonPropertyName("macro")]          string  Macro,
-    [property: JsonPropertyName("code")]           string  Code,
-    [property: JsonPropertyName("owner")]          string  Owner,
-    [property: JsonPropertyName("stationType")]    string? StationType,
-    [property: JsonPropertyName("connectionName")] string? ConnectionName,
-    [property: JsonPropertyName("sectorMacro")]    string  SectorMacro,
-    [property: JsonPropertyName("x")]              double  X,
-    [property: JsonPropertyName("y")]              double  Y,
-    [property: JsonPropertyName("z")]              double  Z);
+    [property: JsonPropertyName("type")]           string   Type,
+    [property: JsonPropertyName("id")]             string   Id,
+    [property: JsonPropertyName("macro")]          string   Macro,
+    [property: JsonPropertyName("code")]           string   Code,
+    [property: JsonPropertyName("owner")]          string   Owner,
+    [property: JsonPropertyName("stationType")]    string?  StationType,
+    [property: JsonPropertyName("connectionName")] string?  ConnectionName,
+    [property: JsonPropertyName("sectorMacro")]    string   SectorMacro,
+    [property: JsonPropertyName("x")]              double   X,
+    [property: JsonPropertyName("y")]              double   Y,
+    [property: JsonPropertyName("z")]              double   Z,
+    /// <summary>Player-assigned or NPC name (ships, some stations). Null if unnamed.</summary>
+    [property: JsonPropertyName("name")]           string?  Name          = null,
+    /// <summary>"wreck" if the component is a wreck; null otherwise.</summary>
+    [property: JsonPropertyName("state")]          string?  State         = null,
+    /// <summary>True if the component is flagged knownto="player" or known="1" in the save.</summary>
+    [property: JsonPropertyName("knownToPlayer")]  bool?    KnownToPlayer = null,
+    /// <summary>Game-time in seconds at which the component was spawned (ships only).</summary>
+    [property: JsonPropertyName("spawnTime")]      double?  SpawnTime     = null);

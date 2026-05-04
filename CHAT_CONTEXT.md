@@ -24,12 +24,38 @@ This document maintains context across chat sessions for the `x4_save_analyser` 
 - `UnpackGameData.Desktop/` — Full WPF MVVM app. Tabs: Unpack Archives, Extract Universe, Settings. Extract Universe runs both `UniverseExtractor` AND `SaveDataAnalyser` in one operation. Builds cleanly.
 - `webapp/` — **React web app** (Vite 5 + React 18 + TypeScript + Tailwind + Recharts + D3 v7). Replaces the old `index.html` HTML app. No compile errors.
 - **Scatter plot positions confirmed working** — see Session 4 below.
+- **`SaveDataAnalyser` outputs**: `sectors.json`, `stations.json`, `ships.json`, `gates.json`, `lockboxes.json`. `ComponentRecord` now carries `name`, `state`, `knownToPlayer`, `spawnTime`.
 - Old HTML visualiser (`index.html`, `x4_save_file_analysis.js`, `hexmap.js`, etc.) — still present for reference; has known bugs logged in `WIP.md`.
 
 **Recommended next steps:**
-1. Use the desktop app to re-run Extract Universe on a save file (game data must already be unpacked).
-2. Load the resulting JSON in `webapp/` — scatter plot positions should now be correct for all sectors including DLCs.
+1. Re-run Extract Universe to regenerate JSON with the new fields and `lockboxes.json`.
+2. Review and display the new data in `webapp/` — see the "Review and display newly extracted data fields" To Do in `WIP.md` for the full list.
 3. See `WIP.md` for remaining To Do items.
+
+---
+
+# Session 5 — Additional Data Extraction + WIP Skill
+
+## What Was Done
+
+### C# — `SaveDataAnalyser` extended (based on `X4-Info-Miner/x4-save-miner.py` review)
+
+Reviewed `x4-save-miner.py` to identify data it captures that was missing from `SaveDataAnalyser`. Added:
+
+| Addition | Detail |
+|---|---|
+| **Lockboxes** | `class="lockbox"` added to `TrackedClasses`; written to new `lockboxes.json` |
+| **Erlking vaults** | `class="object"` added to `TrackedClasses`, filtered to macro prefix `landmarks_erlking_vault`; written to `stations.json` with `stationType: "erlking_vault"` and normalised `type: "datavault"` |
+| **`name`** | Player-assigned or NPC ship name from `name` attribute |
+| **`state`** | `"wreck"` when destroyed; `null` otherwise |
+| **`knownToPlayer`** | `true` when `knownto="player"` (datavaults/ships) or `known="1"` (lockboxes) |
+| **`spawnTime`** | Game-time in seconds at which ship was spawned |
+
+`ComponentRecord` now has 4 optional trailing parameters (defaulted to `null`) so existing call sites are unaffected.
+
+### Global skill created
+
+`C:\Users\KieranSmart\.copilot\skills\update-wip-docs\SKILL.md` — personal skill available in all workspaces. Invoked by "update the WIP docs" / "update session notes" / etc. Procedure: update WIP.md → update CHAT_CONTEXT.md → consistency review.
 
 ---
 
@@ -72,9 +98,9 @@ The X4 game stores sector/zone position data across **5 separate XML files** —
 - Resolves station type from macro name (factory/headquarters/piratebase/tradestation)
 - **Zone position** = static base offset from `sectors/*.xml` (`BuildZonePositionIndex`) + runtime offset from save XML — mirrors JS `zonePositionIndex` / `initSectorData`
 - **Gate position** = zone base + static gate offset from `zones/*.xml` (`BuildGatePositionIndex`) — mirrors JS `gatePositionIndex` / `initZoneData` (this was the missing `initZoneData` bug noted in WIP)
-- Game data dirs are inferred: `sectorsDir` passed explicitly; `zonesDir` = sibling `zones/` folder
-- Writes `sectors.json`, `stations.json`, `ships.json`, `gates.json` to the output dir
-- Data records: `SectorRecord` (id, macro, code, owner, componentCount), `ComponentRecord` (type, id, macro, code, owner, stationType, connectionName, sectorMacro, x, y, z)
+- Game data dirs are inferred from `gameDataRoot` (passed as `{outputFolder}\game\{version}`); both sectors and zones files are found by recursive search
+- Writes `sectors.json`, `stations.json`, `ships.json`, `gates.json`, `lockboxes.json` to the output dir
+- Data records: `SectorRecord` (id, macro, code, owner, componentCount), `ComponentRecord` (type, id, macro, code, owner, stationType, connectionName, sectorMacro, x, y, z, name, state, knownToPlayer, spawnTime)
 
 ### C# — `UniverseExtractorViewModel` changes
 - Stores `_gameFolder` from `ApplySettings`
