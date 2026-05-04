@@ -8,17 +8,20 @@ interface SectorPanelProps {
   sectorMacro: string;
   saveData: SaveData;
   onClose: () => void;
+  expanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
-export default function SectorPanel({ sectorMacro, saveData, onClose }: SectorPanelProps) {
+export default function SectorPanel({ sectorMacro, saveData, onClose, expanded = false, onToggleExpanded }: SectorPanelProps) {
   const pos = sectorPositionMap.get(sectorMacro);
   const sector = saveData.sectors.find(s => s.macro === sectorMacro);
 
   const components = useMemo<ComponentRecord[]>(() => {
-    const stations = saveData.stations.filter(s => s.sectorMacro === sectorMacro);
-    const ships    = saveData.ships.filter(s => s.sectorMacro === sectorMacro);
-    const gates    = saveData.gates.filter(s => s.sectorMacro === sectorMacro);
-    return [...stations, ...ships, ...gates];
+    const stations  = saveData.stations.filter(s => s.sectorMacro === sectorMacro);
+    const ships     = saveData.ships.filter(s => s.sectorMacro === sectorMacro);
+    const gates     = saveData.gates.filter(s => s.sectorMacro === sectorMacro);
+    const lockboxes = (saveData.lockboxes ?? []).filter(s => s.sectorMacro === sectorMacro);
+    return [...stations, ...ships, ...gates, ...lockboxes];
   }, [saveData, sectorMacro]);
 
   // Counts grouped by type
@@ -44,75 +47,63 @@ export default function SectorPanel({ sectorMacro, saveData, onClose }: SectorPa
   const [selectedId, setSelectedId] = useState<string | null>(null);
   useEffect(() => { setSelectedId(null); }, [sectorMacro]);
 
-  return (
-    <div className="flex flex-col h-full bg-gray-950 border-l border-gray-800 overflow-y-auto">
-      {/* Header */}
-      <div className="flex items-start justify-between px-4 py-3 border-b border-gray-800">
-        <div>
-          <h2 className="text-xl font-bold text-white">{sectorName}</h2>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span
-              className="inline-block w-3 h-3 rounded-full"
-              style={{ background: ownerColor }}
-            />
-            <span className="text-base text-gray-300">
-              {getFactionLabel(sector?.owner ?? '') || 'Unknown faction'}
-            </span>
-            {sector?.code && (
-              <span className="text-sm text-gray-500 font-mono">{sector.code}</span>
-            )}
-          </div>
+  // ── Shared: sector header ─────────────────────────────────────────────────
+  const header = (
+    <div className="flex items-start justify-between px-4 py-3 border-b border-gray-800 flex-shrink-0">
+      <div>
+        <h2 className="text-xl font-bold text-white">{sectorName}</h2>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="inline-block w-3 h-3 rounded-full" style={{ background: ownerColor }} />
+          <span className="text-base text-gray-300">
+            {getFactionLabel(sector?.owner ?? '') || 'Unknown faction'}
+          </span>
+          {sector?.code && (
+            <span className="text-sm text-gray-500 font-mono">{sector.code}</span>
+          )}
         </div>
+      </div>
+      <div className="flex items-center gap-1.5 mt-0.5">
+        {onToggleExpanded && (
+          <button
+            onClick={onToggleExpanded}
+            className="text-gray-500 hover:text-gray-200 text-lg leading-none px-1 transition-colors"
+            title={expanded ? 'Collapse to sidebar' : 'Expand plot view'}
+            aria-label={expanded ? 'Collapse to sidebar' : 'Expand plot view'}
+          >{expanded ? '⤡' : '⤢'}</button>
+        )}
         <button
           onClick={onClose}
-          className="text-gray-500 hover:text-gray-200 text-xl leading-none mt-0.5"
+          className="text-gray-500 hover:text-gray-200 text-xl leading-none"
           aria-label="Close"
         >×</button>
       </div>
+    </div>
+  );
 
-      {/* 3D scatter plot */}
-      <div className="px-4 pt-4 pb-2">
-        <ScatterPlot
-          components={components}
-          sectorName={sectorName}
-          selectedId={selectedId}
-          onSelect={c => setSelectedId(c?.id ?? null)}
-        />
-      </div>
-
+  // ── Shared: summary + table ───────────────────────────────────────────────
+  const details = (
+    <>
       {/* Summary counts */}
       <div className="px-4 pb-4 grid grid-cols-2 gap-4">
-
-        {/* By type */}
         <div>
           <h3 className="text-base font-semibold text-gray-300 uppercase tracking-wider mb-2">By type</h3>
           <div className="space-y-2">
             {typeCounts.map(([type, count]) => (
               <div key={type} className="flex items-center gap-2">
-                <span
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ background: typeColor(type) }}
-                />
-                <span className="text-base text-gray-200 flex-1 truncate">{type}</span>
+                <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: typeColor(type) }} />
+                <span className="text-base text-gray-200 flex-1 truncate">{displayTypeName({ type } as ComponentRecord)}</span>
                 <span className="text-base text-gray-400 font-mono">{count}</span>
               </div>
             ))}
           </div>
         </div>
-
-        {/* By owner */}
         <div>
           <h3 className="text-base font-semibold text-gray-300 uppercase tracking-wider mb-2">By owner</h3>
           <div className="space-y-2">
             {ownerCounts.map(([owner, count]) => (
               <div key={owner} className="flex items-center gap-2">
-                <span
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ background: getFactionColor(owner) }}
-                />
-                <span className="text-base text-gray-200 flex-1 truncate">
-                  {getFactionLabel(owner)}
-                </span>
+                <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: getFactionColor(owner) }} />
+                <span className="text-base text-gray-200 flex-1 truncate">{getFactionLabel(owner)}</span>
                 <span className="text-base text-gray-400 font-mono">{count}</span>
               </div>
             ))}
@@ -120,7 +111,7 @@ export default function SectorPanel({ sectorMacro, saveData, onClose }: SectorPa
         </div>
       </div>
 
-      {/* All components list */}
+      {/* All objects table */}
       <div className="px-4 pb-6">
         <h3 className="text-base font-semibold text-gray-300 uppercase tracking-wider mb-2">
           All objects ({components.length})
@@ -130,7 +121,7 @@ export default function SectorPanel({ sectorMacro, saveData, onClose }: SectorPa
             <thead>
               <tr className="text-left text-sm text-gray-400 border-b border-gray-700">
                 <th className="pb-2 pr-3 font-semibold">Type</th>
-                <th className="pb-2 pr-3 font-semibold">Code</th>
+                <th className="pb-2 pr-3 font-semibold">Name / Code</th>
                 <th className="pb-2 pr-3 font-semibold">Owner</th>
                 <th className="pb-2 pr-3 font-semibold text-right">X (km)</th>
                 <th className="pb-2 pr-3 font-semibold text-right">Y (km)</th>
@@ -138,28 +129,40 @@ export default function SectorPanel({ sectorMacro, saveData, onClose }: SectorPa
               </tr>
             </thead>
             <tbody>
-              {components.map(c => (
+              {components.map(c => {
+                const isWreck = c.state === 'wreck';
+                return (
                 <tr
                   key={c.id}
                   className={`border-b border-gray-800/60 cursor-pointer ${
                     selectedId === c.id
                       ? 'bg-blue-900/40 hover:bg-blue-900/50'
                       : 'hover:bg-gray-800/40'
-                  }`}
+                  } ${isWreck ? 'opacity-50' : ''}`}
                   onClick={() => setSelectedId(s => s === c.id ? null : c.id)}
                 >
                   <td className="py-1.5 pr-3">
                     <div className="flex items-center gap-2">
                       <span
                         className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                        style={{ background: typeColor(c.type) }}
+                        style={{ background: typeColor(c.stationType || c.type) }}
                       />
                       <span className="text-gray-200 truncate max-w-[140px]">
-                        {c.stationType || c.type}
+                        {displayTypeName(c)}
                       </span>
+                      {isWreck && <span className="text-xs text-orange-400 ml-1">(wreck)</span>}
+                      {c.knownToPlayer && <span className="text-xs text-yellow-400" title="Known to player">★</span>}
                     </div>
                   </td>
-                  <td className="py-1.5 pr-3 font-mono text-gray-300">{c.code || '—'}</td>
+                  <td className="py-1.5 pr-3">
+                    {c.name
+                      ? <span className="text-gray-200 text-sm">{c.name}</span>
+                      : <span className="font-mono text-gray-300">{c.code || '—'}</span>
+                    }
+                    {c.name && c.code && (
+                      <span className="font-mono text-gray-600 text-xs ml-1">{c.code}</span>
+                    )}
+                  </td>
                   <td className="py-1.5 pr-3">
                     <span style={{ color: getFactionColor(c.owner) }}>
                       {getFactionLabel(c.owner) || '—'}
@@ -175,22 +178,73 @@ export default function SectorPanel({ sectorMacro, saveData, onClose }: SectorPa
                     {(c.z / 1000).toFixed(1)}
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>
       </div>
+    </>
+  );
+
+  // ── Expanded mode: scatter left, details right ────────────────────────────
+  if (expanded) {
+    return (
+      <div className="flex h-full w-full bg-gray-950">
+        {/* Left: scatter plot fills remaining space */}
+        <div className="flex-1 min-w-0 flex flex-col p-4 gap-3 overflow-hidden">
+          <ScatterPlot
+            components={components}
+            sectorName={sectorName}
+            selectedId={selectedId}
+            onSelect={c => setSelectedId(c?.id ?? null)}
+          />
+        </div>
+        {/* Right: header + summaries + table, scrollable */}
+        <div className="w-[400px] flex-shrink-0 flex flex-col border-l border-gray-800 overflow-y-auto">
+          {header}
+          <div className="px-0 pt-4">{details}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Normal sidebar mode ───────────────────────────────────────────────────
+  return (
+    <div className="flex flex-col h-full bg-gray-950 border-l border-gray-800 overflow-y-auto">
+      {header}
+      {/* 3D scatter plot */}
+      <div className="px-4 pt-4 pb-2">
+        <ScatterPlot
+          components={components}
+          sectorName={sectorName}
+          selectedId={selectedId}
+          onSelect={c => setSelectedId(c?.id ?? null)}
+        />
+      </div>
+      {details}
     </div>
   );
 }
 
-function typeColor(type: string): string {
-  switch (type) {
+function typeColor(typeOrSubtype: string): string {
+  switch (typeOrSubtype) {
     case 'station':          return '#4466ff';
+    case 'factory':          return '#4466ff';
+    case 'tradestation':     return '#2255cc';
+    case 'headquarters':     return '#7788ff';
+    case 'piratebase':       return '#884444';
     case 'datavault':        return '#e200ff';
+    case 'erlking_vault':    return '#cc44ff';
+    case 'lockbox':          return '#ff88ff';
     case 'gate':             return '#ffa600';
     case 'highwayentrygate': return '#00a6ff';
     case 'highwayexitgate':  return '#a6e1fc';
     default:                 return '#ffff00';
   }
+}
+
+function displayTypeName(c: ComponentRecord): string {
+  if (c.stationType === 'erlking_vault') return 'Erlking Vault';
+  if (c.stationType) return c.stationType;
+  return c.type;
 }

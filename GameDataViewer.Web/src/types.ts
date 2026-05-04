@@ -18,6 +18,10 @@ export interface ComponentRecord {
   x: number;
   y: number;
   z: number;
+  name?: string;
+  state?: string;
+  knownToPlayer?: boolean;
+  spawnTime?: number;
 }
 
 export interface SaveData {
@@ -25,6 +29,7 @@ export interface SaveData {
   stations: ComponentRecord[];
   ships: ComponentRecord[];
   gates: ComponentRecord[];
+  lockboxes: ComponentRecord[];
 }
 
 export interface HexCell {

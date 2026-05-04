@@ -22,15 +22,23 @@ export default function FilePicker({ onLoad, onError }: FilePickerProps) {
         const file = await fh.getFile();
         return JSON.parse(await file.text());
       };
+      const readOptionalJson = async (name: string) => {
+        try {
+          const fh = await dir.getFileHandle(name);
+          const file = await fh.getFile();
+          return JSON.parse(await file.text());
+        } catch { return []; }
+      };
 
-      const [sectors, stations, ships, gates] = await Promise.all([
+      const [sectors, stations, ships, gates, lockboxes] = await Promise.all([
         readJson('sectors.json'),
         readJson('stations.json'),
         readJson('ships.json'),
         readJson('gates.json'),
+        readOptionalJson('lockboxes.json'),
       ]);
 
-      onLoad({ sectors, stations, ships, gates });
+      onLoad({ sectors, stations, ships, gates, lockboxes });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       if ((e as { name?: string }).name !== 'AbortError') onError(msg);
@@ -52,15 +60,27 @@ export default function FilePicker({ onLoad, onError }: FilePickerProps) {
       if (!f) return Promise.reject(new Error(`Missing file: ${name}`));
       return f.text().then(t => JSON.parse(t));
     };
+    const readOptionalJson = (name: string): Promise<unknown> => {
+      const f = fileMap.get(name);
+      if (!f) return Promise.resolve([]);
+      return f.text().then(t => JSON.parse(t));
+    };
 
     Promise.all([
       readJson('sectors.json'),
       readJson('stations.json'),
       readJson('ships.json'),
       readJson('gates.json'),
+      readOptionalJson('lockboxes.json'),
     ])
-      .then(([sectors, stations, ships, gates]) =>
-        onLoad({ sectors: sectors as SaveData['sectors'], stations: stations as SaveData['stations'], ships: ships as SaveData['ships'], gates: gates as SaveData['gates'] })
+      .then(([sectors, stations, ships, gates, lockboxes]) =>
+        onLoad({
+          sectors: sectors as SaveData['sectors'],
+          stations: stations as SaveData['stations'],
+          ships: ships as SaveData['ships'],
+          gates: gates as SaveData['gates'],
+          lockboxes: lockboxes as SaveData['lockboxes'],
+        })
       )
       .catch(err => onError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));

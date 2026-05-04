@@ -16,21 +16,70 @@ This document maintains context across chat sessions for the `x4_save_analyser` 
 | X4 game install | `D:\SteamLibrary\steamapps\common\X4 Foundations` |
 | X4 save files | `C:\Users\KieranSmart\OneDrive\Documents\Egosoft\X4\99208493\save` |
 | Settings JSON (app) | `%AppData%\X4SaveAnalyser\settings.json` |
-| Web app | `c:\Repos\x4_save_analyser\webapp\` — `npm run dev` to start |
+| Web app | `c:\Repos\x4_save_analyser\GameDataViewer.Web\` — `npm run dev` to start |
 
 **Current repo state (as of last session):**
 - `UnpackGameData.Core/` — `ArchiveExtractor.cs`, `UniverseExtractor.cs`, `SaveDataAnalyser.cs`, `Models.cs`. Builds cleanly.
 - `UnpackGameData/` — Console app. Thin wrapper over Core. Builds cleanly.
 - `UnpackGameData.Desktop/` — Full WPF MVVM app. Tabs: Unpack Archives, Extract Universe, Settings. Extract Universe runs both `UniverseExtractor` AND `SaveDataAnalyser` in one operation. Builds cleanly.
-- `webapp/` — **React web app** (Vite 5 + React 18 + TypeScript + Tailwind + Recharts + D3 v7). Replaces the old `index.html` HTML app. No compile errors.
-- **Scatter plot positions confirmed working** — see Session 4 below.
-- **`SaveDataAnalyser` outputs**: `sectors.json`, `stations.json`, `ships.json`, `gates.json`, `lockboxes.json`. `ComponentRecord` now carries `name`, `state`, `knownToPlayer`, `spawnTime`.
-- Old HTML visualiser (`index.html`, `x4_save_file_analysis.js`, `hexmap.js`, etc.) — still present for reference; has known bugs logged in `WIP.md`.
+- `GameDataViewer.Web/` — **React web app** (Vite 5 + React 18 + TypeScript + Tailwind + Recharts + D3 v7). No compile errors.
+  - Loads `sectors.json`, `stations.json`, `ships.json`, `gates.json`, `lockboxes.json` (lockboxes optional)
+  - `ComponentRecord` carries `name`, `state`, `knownToPlayer`, `spawnTime`
+  - All hostile factions use `#ff3333` (red); configurable in `factions.ts`
+  - Scatter plot: per-type show/hide toggles, reset-orientation button, hover tooltip, wreck opacity
+  - SectorPanel: normal sidebar mode + expanded full-screen mode (double-click hex or ⤢ button)
+  - StatsPanel: stat cards for sectors, stations, ships, data vaults, erlking vaults, lockboxes
+- Old HTML visualiser (`index.html`, `x4_save_file_analysis.js`, `hexmap.js`, `hexbin.js`, `chrome_start.bat`) — **removed from working tree** (Session 7); recoverable from git history if needed. Had known bugs: `initSectorData` called twice (second call should be `initZoneData`), unused `zoneFilter`/`stationFilter` arrays, commented-out chart blocks.
 
 **Recommended next steps:**
-1. Re-run Extract Universe to regenerate JSON with the new fields and `lockboxes.json`.
-2. Review and display the new data in `webapp/` — see the "Review and display newly extracted data fields" To Do in `WIP.md` for the full list.
-3. See `WIP.md` for remaining To Do items.
+1. Test the web app against real extracted save data.
+2. Consider making the ship filter configurable (currently hardcoded to player/Kha'ak/Yaki/Xenon/ownerless).
+3. Consider persisting the last-loaded file path in `localStorage`.
+4. See `WIP.md` for remaining To Do items.
+
+---
+
+# Session 6 — Web App: New Data Fields, Expanded Plot View, Hostile Colours
+
+## What Was Done
+
+### Web App — New data fields displayed
+
+`types.ts` extended: `ComponentRecord` gains `name?`, `state?`, `knownToPlayer?`, `spawnTime?`; `SaveData` gains `lockboxes`.
+
+`FilePicker.tsx` (both directory-picker and file-input paths) and `App.tsx` now load `lockboxes.json` as an optional file (defaults to `[]` if absent).
+
+`ScatterPlot.tsx` rewritten with:
+- **Per-type show/hide toggles** (Stations / Ships / Gates / Datavaults / Highways / Lockboxes) with counts; only groups present in the sector are shown
+- **Reset view button** — restores default azimuth + zoom
+- **Hover tooltip** — shows type, name, owner, wreck/known-to-player flags, XYZ coords
+- Wrecks rendered at 35% opacity; hostile faction dots use faction colour from `factions.ts`
+- Lockboxes added as a distinct type (pink, `#ff88ff`)
+
+`SectorPanel.tsx` updated:
+- Lockboxes included in component list
+- Table column renamed to "Name / Code"; player-assigned names displayed prominently
+- Wreck rows dimmed + orange "(wreck)" tag; known-to-player rows show ★
+- Erlking Vaults labelled "Erlking Vault" with distinct purple (`#cc44ff`)
+- **Expanded mode** added: when `expanded={true}`, scatter plot fills left area, details shift to 400px right panel
+- ⤢/⤡ toggle button in panel header
+
+`StatsPanel.tsx`: Erlking Vault and Lockbox stat cards added (shown only when count > 0).
+
+### Web App — Hostile faction colours
+
+`factions.ts`: All factions in the `HOSTILE` set (`khaak`, `xenon`, `yaki`, `scaleplate`, `criminal`, `smuggler`, `buccaneers`) set to `#ff3333`. Other faction colours unchanged. Colours remain configurable.
+
+### Web App — Expanded plot view
+
+`HexMap.tsx`:
+- Added `onSectorDoubleClick?` prop
+- `onClick` handler now uses `e.detail` to distinguish single click (select sector) from double click (enter expanded mode)
+
+`App.tsx`:
+- Added `expanded` state
+- `handleSectorDoubleClick` sets `selectedMacro` + `expanded = true`
+- In expanded mode: hex map hidden; `SectorPanel` takes full width with `expanded={true}`; mini hex map overlay rendered bottom-left (172×108, `pointer-events-none` inner map, clickable wrapper to collapse)
 
 ---
 
@@ -92,7 +141,7 @@ The X4 game stores sector/zone position data across **5 separate XML files** —
 ## What Was Done
 
 ### C# — `SaveDataAnalyser` (new file in `UnpackGameData.Core`)
-- Mirrors `x4_save_file_analysis.js` logic in C#
+- `Mirrors x4_save_file_analysis.js` logic in C#
 - Walks `galaxy → cluster → sector → zone → component` in the extracted universe XML
 - Applies the same ship filter as the JS (player/khaak/yaki/xenon/ownerless; hostile factions L/XL only)
 - Resolves station type from macro name (factory/headquarters/piratebase/tradestation)
@@ -108,7 +157,7 @@ The X4 game stores sector/zone position data across **5 separate XML files** —
 - Calls `SaveDataAnalyser.AnalyseAsync` after `UniverseExtractor.ExtractAsync`
 - *(Note: originally passed a hardcoded `sectors/` subdirectory — corrected in Session 4 to pass the root so all DLC files are found)*
 
-### React Web App (`webapp/`)
+### React Web App (`GameDataViewer.Web/`)
 Built from scratch with Vite 5 + React 18 + TypeScript 5.4 + Tailwind CSS 3.4 + Recharts 2.13 + D3 v7.
 
 **Key files:**
@@ -123,7 +172,7 @@ Built from scratch with Vite 5 + React 18 + TypeScript 5.4 + Tailwind CSS 3.4 + 
 | `src/components/ScatterPlot.tsx` | 3D perspective scatter plot; drag-rotate; scroll-zoom; real-world km axis ticks; axis show/hide toggle (halved opacity when visible); selection state lifted to parent (`selectedId` / `onSelect` props) |
 | `src/components/SectorPanel.tsx` | Right panel: ScatterPlot + by-type/owner summaries + full component table; clicking a table row highlights the matching dot on the plot (shared `selectedId` state) |
 | `src/components/StatsPanel.tsx` | Summary cards + horizontal Recharts bar charts (sectors/stations/ships by faction) |
-| `src/App.tsx` | Root — layout, Galaxy Map / Statistics tabs, state, 760px side panel |
+| `src/App.tsx` | Root — layout, Galaxy Map / Statistics tabs, state; sidebar mode (760px) + expanded full-screen mode with mini map overlay |
 
 **Known issue:** ~~Scatter plot component positions still appear incorrect~~ — **fixed in Session 4** (DLC sector/zone files were not being aggregated; see Session 4 for details).
 

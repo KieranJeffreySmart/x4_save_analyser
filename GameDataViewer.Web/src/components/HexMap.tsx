@@ -64,9 +64,10 @@ interface HexMapProps {
   saveData: SaveData | null;
   selectedMacro: string | null;
   onSectorClick: (macro: string) => void;
+  onSectorDoubleClick?: (macro: string) => void;
 }
 
-export default function HexMap({ saveData, selectedMacro, onSectorClick }: HexMapProps) {
+export default function HexMap({ saveData, selectedMacro, onSectorClick, onSectorDoubleClick }: HexMapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<{ sx: number; sy: number; vb: ViewBox } | null>(null);
   const [viewBox, setViewBox] = useState<ViewBox>({ x: 0, y: 0, w: 2800, h: 1500 });
@@ -180,9 +181,13 @@ export default function HexMap({ saveData, selectedMacro, onSectorClick }: HexMa
 
   const handleHexMouseLeave = useCallback(() => { setTooltip(null); }, []);
 
-  const handleHexClick = useCallback((macro: string) => {
-    onSectorClick(macro);
-  }, [onSectorClick]);
+  const handleHexClick = useCallback((e: React.MouseEvent, macro: string) => {
+    if (e.detail === 2 && onSectorDoubleClick) {
+      onSectorDoubleClick(macro);
+    } else if (e.detail === 1) {
+      onSectorClick(macro);
+    }
+  }, [onSectorClick, onSectorDoubleClick]);
 
   const vbStr = `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`;
 
@@ -205,7 +210,7 @@ export default function HexMap({ saveData, selectedMacro, onSectorClick }: HexMa
           return (
             <g
               key={cell.macro}
-              onClick={() => handleHexClick(cell.macro)}
+              onClick={e => handleHexClick(e, cell.macro)}
               onMouseEnter={e => handleHexMouseEnter(e, cell)}
               onMouseMove={handleHexMouseMove}
               onMouseLeave={handleHexMouseLeave}

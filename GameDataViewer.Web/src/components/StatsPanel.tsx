@@ -59,6 +59,8 @@ export default function StatsPanel({ saveData }: StatsPanelProps) {
   }, [saveData]);
 
   const dataVaultCount = saveData.stations.filter(s => s.type === 'datavault').length;
+  const lockboxCount   = (saveData.lockboxes ?? []).length;
+  const erlkingCount   = saveData.stations.filter(s => s.stationType === 'erlking_vault').length;
 
   return (
     <div className="p-6 space-y-8 overflow-y-auto h-full">
@@ -69,6 +71,8 @@ export default function StatsPanel({ saveData }: StatsPanelProps) {
         <StatCard label="Stations" value={saveData.stations.filter(s => s.type === 'station').length} />
         <StatCard label="Notable ships" value={saveData.ships.length} />
         <StatCard label="Data vaults" value={dataVaultCount} />
+        {erlkingCount > 0 && <StatCard label="Erlking vaults" value={erlkingCount} />}
+        {lockboxCount > 0 && <StatCard label="Lockboxes" value={lockboxCount} />}
       </div>
 
       {/* Sector ownership */}
