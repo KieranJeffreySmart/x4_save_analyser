@@ -128,20 +128,19 @@ public sealed class UniverseExtractorViewModel : ViewModelBase
             string? analysisDir = Path.GetDirectoryName(_destFile);
             if (!string.IsNullOrEmpty(analysisDir))
             {
-                // Locate unpacked game data sector XMLs to enable correct zone offset calculation.
-                // Path: {outputFolder}/game/{version}/maps/xu_ep2_universe/sectors/
-                string? sectorsDir = null;
+                // Locate the unpacked game data root so SaveDataAnalyser can find sector/zone XMLs
+                // from both the core game and all DLCs (each DLC extracts to its own sub-directory).
+                string? gameDataRoot = null;
                 if (!string.IsNullOrEmpty(_outputFolder) && !string.IsNullOrEmpty(_gameFolder))
                 {
-                    string gameDataRoot = SettingsService.GetGameOutputFolder(_outputFolder, _gameFolder);
-                    string candidate = Path.Combine(gameDataRoot, "maps", "xu_ep2_universe", "sectors");
+                    string candidate = SettingsService.GetGameOutputFolder(_outputFolder, _gameFolder);
                     if (Directory.Exists(candidate))
-                        sectorsDir = candidate;
+                        gameDataRoot = candidate;
                 }
 
                 AppendLog(string.Empty);
                 AppendLog("--- Analysing universe data ---");
-                await SaveDataAnalyser.AnalyseAsync(_destFile, analysisDir, sectorsDir, progress, _cts.Token);
+                await SaveDataAnalyser.AnalyseAsync(_destFile, analysisDir, gameDataRoot, progress, _cts.Token);
             }
 
             StatusCallback?.Invoke($"Done \u2014 universe and analysis saved to {Path.GetFileName(analysisDir ?? _destFile)}.");

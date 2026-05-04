@@ -4,7 +4,7 @@
 
 - **Game data unpacking** — extracts XML/JS/CSS/HTML files from X4 `.cat`/`.dat` archives for the base game and all DLCs
 - **Save file cleaning** — strips full save files down to just the `<universe>` element for faster loading
-- **Save data analysis (C#)** — `SaveDataAnalyser` walks the extracted universe XML and writes `sectors.json`, `stations.json`, `ships.json`, `gates.json` alongside `universe.xml`; both steps run automatically from the Extract Universe tab
+- **Save data analysis (C#)** — `SaveDataAnalyser` walks the extracted universe XML and writes `sectors.json`, `stations.json`, `ships.json`, `gates.json` alongside `universe.xml`; both steps run automatically from the Extract Universe tab; sector/zone/gate position data is now aggregated across core game + all 4 DLCs
 - **React web app** — replaces the old `index.html` D3/HTML app; built with Vite + React + TypeScript + Tailwind CSS + Recharts + D3 v7; located in `webapp/`
   - Galaxy hex map with pan/zoom, faction colours, enemy/datavault/ownerless indicators, hover tooltip, click to select sector
   - Sector detail panel: 3D scatter plot, by-type/by-owner summary, full component table with click-to-highlight linkage to the plot
@@ -21,7 +21,6 @@
 ## To Do
 
 ### Web App (React — `webapp/`)
-- [ ] **Scatter plot positions still look incorrect** — zone offsets (static game-data base + runtime save offset) and gate positions (from zones XMLs) are now wired in the C# extractor; needs re-extraction and visual verification after re-running Extract Universe with game data configured
 - [ ] Add show/hide toggles per component type (stations, ships, gates, datavaults, highways) on the scatter plot
 - [ ] Add a reset-orientation button to the 3D scatter plot
 - [ ] Add a hover tooltip on scatter plot dots (currently only click-to-select works)
@@ -32,7 +31,7 @@
 ### C# Desktop App (`UnpackGameData.Desktop`)
 - [ ] Test against the real X4 installation at `D:\SteamLibrary\steamapps\common\X4 Foundations`
 - [ ] Test universe extraction + analysis against real gzip saves
-- [ ] Verify scatter plot coordinates are correct after re-extraction with game data sector/zone XMLs loaded
+- [x] ~~Verify scatter plot coordinates are correct~~ — fixed; `SaveDataAnalyser` now aggregates core + all DLC sector/zone files
 - [ ] Consider a **Batch Universe Extract** mode — extract all saves in one go
 - [ ] Package as a single-file self-contained executable
 
@@ -60,6 +59,7 @@
 
 - Updated README with full project summary, script descriptions, data directory layout, and getting started guide
 - Created `WIP.md` and `CHAT_CONTEXT.md` for cross-session continuity
+- **Scatter plot positions fixed** — `SaveDataAnalyser` now recursively searches the full game data output root for all `*sectors*.xml` and `*zones*.xml` files under any `xu_ep2_universe` path, aggregating core game + all 4 DLC files (Boron, Split/CoH, Terran, Pirate); previously only the core `sectors/` subdirectory was searched, so all DLC-sector components had zero zone offsets and appeared at wrong positions
 - **C# solution** (`x4_save_analyser.sln`) with three projects: `UnpackGameData.Core`, `UnpackGameData` (console), `UnpackGameData.Desktop` (WPF MVVM)
 - Full MVVM desktop app: Settings tab, Unpack Archives tab, Extract Universe tab
 - Settings persistence to `%AppData%\X4SaveAnalyser\settings.json`
@@ -69,7 +69,7 @@
   - Ship filter mirrors JS: player/khaak/yaki/xenon/ownerless; hostile factions L/XL only
   - Zone position = static game-data offset (from `sectors/*.xml`) + runtime save-file offset — mirrors JS `zonePositionIndex`
   - Gate position = zone base + static gate offset (from `zones/*.xml`) — mirrors JS `gatePositionIndex` / `initZoneData`
-  - Accepts optional `gameDataSectorsDir`; zones dir is inferred as sibling `zones/` folder
+  - Accepts optional `gameDataRoot`; recursively searches all `*sectors*.xml` / `*zones*.xml` under `xu_ep2_universe` in any DLC subfolder
 - **Extract Universe tab merged** — single operation now runs `UniverseExtractor` then `SaveDataAnalyser`; outputs `universe.xml` + JSON files to same folder
 - **React web app scaffolded and implemented** (`webapp/` — Vite 5 + React 18 + TypeScript 5.4 + Tailwind CSS 3.4 + Recharts 2.13 + D3 v7):
   - `FilePicker.tsx` — File System Access API + manual fallback
@@ -102,9 +102,9 @@ A WPF desktop application replacing the Python scripts for game data extraction 
   - Wraps output in `<savegame>` and writes to a specified output path
 
 - **`UnpackGameData.Core` — `SaveDataAnalyser`**
-  - Accepts `universePath`, `outputDir`, optional `gameDataSectorsDir`
-  - Builds `zonePositionIndex` from `sectors/*.xml` (static zone offsets within sectors)
-  - Builds `gatePositionIndex` from `zones/*.xml` (static gate offsets within zones)
+  - Accepts `universePath`, `outputDir`, optional `gameDataRoot`
+  - Recursively finds all `*sectors*.xml` / `*zones*.xml` under any `xu_ep2_universe` path within `gameDataRoot`, aggregating core + all DLC data
+  - Builds `zonePositionIndex` and `gatePositionIndex` from those files
   - Final component position = static zone offset + runtime zone offset + component own offset (or gate offset)
   - Writes `sectors.json`, `stations.json`, `ships.json`, `gates.json`
 
@@ -112,12 +112,12 @@ A WPF desktop application replacing the Python scripts for game data extraction 
   - **Settings tab**: configure game folder, save folder, output folder; persists to `%AppData%\X4SaveAnalyser\settings.json`
   - **Unpack Archives tab**: progress log, Cancel button
   - **Extract Universe tab**: file picker → auto-derived output path → runs UniverseExtractor + SaveDataAnalyser in sequence
-  - Game data sectors dir resolved from settings at extraction time: `{outputFolder}\game\{version}\maps\xu_ep2_universe\sectors\`
+  - Game data root passed to `SaveDataAnalyser` at extraction time: `{outputFolder}\game\{version}`
 
 ### To Do — Desktop App
 
 - [ ] Test against real game installation and saves
-- [ ] Verify scatter plot positions after re-extraction
+- [x] ~~Verify scatter plot positions after re-extraction~~ — fixed in Session 4
 - [ ] Batch extract mode
 - [ ] Single-file self-contained publish
 

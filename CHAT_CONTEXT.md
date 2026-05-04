@@ -21,14 +21,43 @@ This document maintains context across chat sessions for the `x4_save_analyser` 
 **Current repo state (as of last session):**
 - `UnpackGameData.Core/` — `ArchiveExtractor.cs`, `UniverseExtractor.cs`, `SaveDataAnalyser.cs`, `Models.cs`. Builds cleanly.
 - `UnpackGameData/` — Console app. Thin wrapper over Core. Builds cleanly.
-- `UnpackGameData.Desktop/` — Full WPF MVVM app. Tabs: Unpack Archives, Extract Universe, Settings. Extract Universe now runs both `UniverseExtractor` AND `SaveDataAnalyser` in one operation. Builds cleanly.
+- `UnpackGameData.Desktop/` — Full WPF MVVM app. Tabs: Unpack Archives, Extract Universe, Settings. Extract Universe runs both `UniverseExtractor` AND `SaveDataAnalyser` in one operation. Builds cleanly.
 - `webapp/` — **React web app** (Vite 5 + React 18 + TypeScript + Tailwind + Recharts + D3 v7). Replaces the old `index.html` HTML app. No compile errors.
+- **Scatter plot positions confirmed working** — see Session 4 below.
 - Old HTML visualiser (`index.html`, `x4_save_file_analysis.js`, `hexmap.js`, etc.) — still present for reference; has known bugs logged in `WIP.md`.
 
 **Recommended next steps:**
-1. Re-run Extract Universe on a save file (with game data unpacked first so sector/zone XMLs are present at `{output}\game\{version}\maps\xu_ep2_universe\`) to regenerate JSON with correct zone+gate positions.
-2. Load the JSON in `webapp/` and verify scatter plot component positions visually.
-3. See `WIP.md` for full To Do list.
+1. Use the desktop app to re-run Extract Universe on a save file (game data must already be unpacked).
+2. Load the resulting JSON in `webapp/` — scatter plot positions should now be correct for all sectors including DLCs.
+3. See `WIP.md` for remaining To Do items.
+
+---
+
+# Session 4 — Scatter Plot Position Fix
+
+## Problem
+
+Scatter plot component positions were wrong for all DLC sectors (Boron, Split/CoH, Terran, Pirate). Components appeared at the sector origin or completely wrong coordinates.
+
+## Root Cause
+
+The X4 game stores sector/zone position data across **5 separate XML files** — one for the core game and one per DLC — in separate directories after extraction:
+
+| File | Macro count |
+|---|---|
+| `ego_core/.../sectors.xml` | ~655 |
+| `ego_dlc_boron/.../dlc_boron_sectors.xml` | 123 |
+| `ego_dlc_split/.../dlc4_sectors.xml` | 202 |
+| `ego_dlc_terran/.../dlc_terran_sectors.xml` | 136 |
+| `ego_dlc_pirate/.../dlc_pirate_sectors.xml` | 52 |
+
+`SaveDataAnalyser.BuildZonePositionIndex` and `BuildGatePositionIndex` were only reading from a single hardcoded `sectors/` subdirectory, so ~513 DLC zones had zero offsets — all their components landed at the sector origin.
+
+## Fix
+
+**`UnpackGameData.Core/SaveDataAnalyser.cs`** — Both `BuildZonePositionIndex` and `BuildGatePositionIndex` now accept `gameDataRoot` (the extracted game output folder, e.g. `{output}\game\800`) and use `Directory.EnumerateFiles(..., SearchOption.AllDirectories)` filtered to files whose path contains `xu_ep2_universe` and whose filename contains `sectors` / `zones`. This picks up all files regardless of flat or nested layout.
+
+**`UnpackGameData.Desktop/ViewModels/UniverseExtractorViewModel.cs`** — Now passes `gameDataRoot = {output}\game\{version}` to `AnalyseAsync` instead of drilling down to `\maps\xu_ep2_universe\sectors\` (which only existed for the core game).
 
 ---
 
@@ -49,8 +78,9 @@ This document maintains context across chat sessions for the `x4_save_analyser` 
 
 ### C# — `UniverseExtractorViewModel` changes
 - Stores `_gameFolder` from `ApplySettings`
-- At extraction time resolves `sectorsDir` = `{outputFolder}\game\{version}\maps\xu_ep2_universe\sectors\`
-- Calls `SaveDataAnalyser.AnalyseAsync` after `UniverseExtractor.ExtractAsync`; passes `sectorsDir` (or null if not found)
+- At extraction time passes `gameDataRoot = {outputFolder}\game\{version}` to `SaveDataAnalyser.AnalyseAsync`
+- Calls `SaveDataAnalyser.AnalyseAsync` after `UniverseExtractor.ExtractAsync`
+- *(Note: originally passed a hardcoded `sectors/` subdirectory — corrected in Session 4 to pass the root so all DLC files are found)*
 
 ### React Web App (`webapp/`)
 Built from scratch with Vite 5 + React 18 + TypeScript 5.4 + Tailwind CSS 3.4 + Recharts 2.13 + D3 v7.
@@ -69,7 +99,7 @@ Built from scratch with Vite 5 + React 18 + TypeScript 5.4 + Tailwind CSS 3.4 + 
 | `src/components/StatsPanel.tsx` | Summary cards + horizontal Recharts bar charts (sectors/stations/ships by faction) |
 | `src/App.tsx` | Root — layout, Galaxy Map / Statistics tabs, state, 760px side panel |
 
-**Known issue:** Scatter plot component positions still appear incorrect after the zone/gate offset fixes. Needs re-extraction with game data present and visual verification.
+**Known issue:** ~~Scatter plot component positions still appear incorrect~~ — **fixed in Session 4** (DLC sector/zone files were not being aggregated; see Session 4 for details).
 
 ---
 

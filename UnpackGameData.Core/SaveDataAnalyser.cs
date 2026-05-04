@@ -48,19 +48,19 @@ public static class SaveDataAnalyser
     public static async Task AnalyseAsync(
         string universePath,
         string outputDir,
-        string? gameDataSectorsDir = null,
+        string? gameDataRoot = null,
         IProgress<string>? progress = null,
         CancellationToken cancellationToken = default)
     {
         await Task.Run(
-            () => Analyse(universePath, outputDir, gameDataSectorsDir, progress, cancellationToken),
+            () => Analyse(universePath, outputDir, gameDataRoot, progress, cancellationToken),
             cancellationToken).ConfigureAwait(false);
     }
 
     private static void Analyse(
         string universePath,
         string outputDir,
-        string? gameDataSectorsDir,
+        string? gameDataRoot,
         IProgress<string>? progress,
         CancellationToken cancellationToken)
     {
@@ -70,15 +70,14 @@ public static class SaveDataAnalyser
         progress?.Report($"Loading: {Path.GetFileName(universePath)}");
 
         // Build zone position index from static game-data sector XMLs.
-        // This mirrors the JS zonePositionIndex built by initSectorData().
-        var zonePositionIndex = BuildZonePositionIndex(gameDataSectorsDir, progress);
+        // Searches all *sectors*.xml files under any xu_ep2_universe directory in gameDataRoot,
+        // aggregating core + all DLC sector data — mirrors JS initSectorData().
+        var zonePositionIndex = BuildZonePositionIndex(gameDataRoot, progress);
 
         // Build gate position index from static game-data zone XMLs.
-        // This mirrors the JS gatePositionIndex built by initZoneData().
-        string? gameDataZonesDir = gameDataSectorsDir is null
-            ? null
-            : Path.Combine(Path.GetDirectoryName(gameDataSectorsDir)!, "zones");
-        var gatePositionIndex = BuildGatePositionIndex(gameDataZonesDir, progress);
+        // Searches all *zones*.xml files under any xu_ep2_universe directory in gameDataRoot,
+        // aggregating core + all DLC zone data — mirrors JS initZoneData().
+        var gatePositionIndex = BuildGatePositionIndex(gameDataRoot, progress);
 
         var doc = XDocument.Load(universePath);
 
@@ -232,20 +231,27 @@ public static class SaveDataAnalyser
 
     /// <summary>
     /// Builds a map from zone macro name (lowercase) to its static offset within its sector.
-    /// Reads all *.xml files in <paramref name="sectorsDir"/> — the game data sectors folder
-    /// (e.g. maps/xu_ep2_universe/sectors/) — mirroring JS initSectorData().
-    /// Returns an empty dictionary if the directory is null or missing.
+    /// Searches all *sectors*.xml files under any xu_ep2_universe directory within
+    /// <paramref name="gameDataRoot"/>, aggregating core game data and all DLCs.
+    /// Mirrors JS initSectorData(). Returns an empty dictionary if root is null or missing.
     /// </summary>
     private static Dictionary<string, (double x, double y, double z)> BuildZonePositionIndex(
-        string? sectorsDir,
+        string? gameDataRoot,
         IProgress<string>? progress)
     {
         var index = new Dictionary<string, (double x, double y, double z)>(StringComparer.OrdinalIgnoreCase);
 
-        if (string.IsNullOrEmpty(sectorsDir) || !Directory.Exists(sectorsDir))
+        if (string.IsNullOrEmpty(gameDataRoot) || !Directory.Exists(gameDataRoot))
             return index;
 
-        foreach (string xmlFile in Directory.GetFiles(sectorsDir, "*.xml", SearchOption.TopDirectoryOnly))
+        var sectorFiles = Directory
+            .EnumerateFiles(gameDataRoot, "*.xml", SearchOption.AllDirectories)
+            .Where(f => f.IndexOf("xu_ep2_universe", StringComparison.OrdinalIgnoreCase) >= 0
+                     && Path.GetFileNameWithoutExtension(f)
+                            .IndexOf("sectors", StringComparison.OrdinalIgnoreCase) >= 0)
+            .ToList();
+
+        foreach (string xmlFile in sectorFiles)
         {
             try
             {
@@ -274,26 +280,33 @@ public static class SaveDataAnalyser
             catch { /* skip malformed files */ }
         }
 
-        progress?.Report($"Loaded {index.Count} zone positions from game data ({Path.GetFileName(sectorsDir)}).");
+        progress?.Report($"Loaded {index.Count} zone positions from {sectorFiles.Count} sector file(s).");
         return index;
     }
 
     /// <summary>
     /// Builds a map from gate connection name (lowercase) to its static position within its zone.
-    /// Reads all *.xml files in <paramref name="zonesDir"/> — the game data zones folder
-    /// (e.g. maps/xu_ep2_universe/zones/) — mirroring JS initZoneData().
-    /// Returns an empty dictionary if the directory is null or missing.
+    /// Searches all *zones*.xml files under any xu_ep2_universe directory within
+    /// <paramref name="gameDataRoot"/>, aggregating core game data and all DLCs.
+    /// Mirrors JS initZoneData(). Returns an empty dictionary if root is null or missing.
     /// </summary>
     private static Dictionary<string, (double x, double y, double z)> BuildGatePositionIndex(
-        string? zonesDir,
+        string? gameDataRoot,
         IProgress<string>? progress)
     {
         var index = new Dictionary<string, (double x, double y, double z)>(StringComparer.OrdinalIgnoreCase);
 
-        if (string.IsNullOrEmpty(zonesDir) || !Directory.Exists(zonesDir))
+        if (string.IsNullOrEmpty(gameDataRoot) || !Directory.Exists(gameDataRoot))
             return index;
 
-        foreach (string xmlFile in Directory.GetFiles(zonesDir, "*.xml", SearchOption.TopDirectoryOnly))
+        var zoneFiles = Directory
+            .EnumerateFiles(gameDataRoot, "*.xml", SearchOption.AllDirectories)
+            .Where(f => f.IndexOf("xu_ep2_universe", StringComparison.OrdinalIgnoreCase) >= 0
+                     && Path.GetFileNameWithoutExtension(f)
+                            .IndexOf("zones", StringComparison.OrdinalIgnoreCase) >= 0)
+            .ToList();
+
+        foreach (string xmlFile in zoneFiles)
         {
             try
             {
@@ -322,7 +335,7 @@ public static class SaveDataAnalyser
             catch { /* skip malformed files */ }
         }
 
-        progress?.Report($"Loaded {index.Count} gate positions from game data ({Path.GetFileName(zonesDir)}).");
+        progress?.Report($"Loaded {index.Count} gate positions from {zoneFiles.Count} zone file(s).");
         return index;
     }
 
